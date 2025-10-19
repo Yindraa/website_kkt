@@ -3,15 +3,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import {
-  MapPin,
-  Users,
-  Landmark,
-  Flag,
-  Phone,
-  ExternalLink,
-  Mail,
-} from "lucide-react";
+import { MapPin, Users, Landmark, Flag, Phone, Mail } from "lucide-react";
 import { Appear, Reveal, stagger, fadeUp } from "@/components/FX";
 
 export default function SectionProfil() {

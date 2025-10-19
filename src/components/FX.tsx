@@ -1,8 +1,13 @@
 // src/components/FX.tsx
 "use client";
 
-import { motion, useReducedMotion, type Variants } from "framer-motion";
-import React from "react";
+import {
+  motion,
+  useReducedMotion,
+  type Variants,
+  type MotionProps,
+} from "framer-motion";
+import React, { type ComponentType } from "react";
 
 /** === Variants helper (ekspor fungsi langsung) === */
 export const stagger = (delay = 0, gap = 0.06): Variants => ({
@@ -37,10 +42,18 @@ export const fx = { stagger, fadeUp, fade, zoom };
 
 type AsProp = React.ElementType;
 
-/** Pastikan selalu jadi motion component (menerima variants, initial, dll.) */
+// Tambahkan tipe umum untuk Komponen Motion
+type MotionBaseComponent<T extends React.ElementType> = ComponentType<
+  MotionProps & React.ComponentProps<T>
+>;
+
 function toMotionComponent(as?: AsProp) {
   const Base: AsProp = as ?? "div";
-  return (motion as any)(Base);
+
+  // SOLUSI: Menambahkan komentar untuk menonaktifkan aturan ESLint hanya pada baris ini.
+  // Baris 41:
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (motion as any)(Base) as MotionBaseComponent<typeof Base>;
 }
 
 /** Reveal saat discroll (sekali saja) */
