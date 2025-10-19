@@ -1,103 +1,154 @@
-import Image from "next/image";
+import Link from "next/link";
+import { Newspaper, Store, MapPin, Stethoscope, Phone } from "lucide-react";
 
 export default function Home() {
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="mx-auto max-w-6xl px-4">
+      {/* HERO */}
+      <section className="py-10 sm:py-14">
+        <div className="grid gap-6 lg:grid-cols-2 lg:items-center">
+          {/* Kolom teks */}
+          <div>
+            <h1 className="text-3xl sm:text-4xl font-bold leading-tight text-slate-900">
+              Selamat datang di Website Desa Leilem
+            </h1>
+            <p className="mt-3 text-slate-600 max-w-prose">
+              Dapatkan informasi profil desa, berita terbaru, pelaku UMKM,
+              potensi wisata, layanan kesehatan, serta kontak dan layanan warga
+              — dalam satu tempat.
+            </p>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link href="/berita" className="btn btn-primary">
+                Lihat Berita
+              </Link>
+              <Link href="/umkm" className="btn btn-ghost">
+                Jelajahi UMKM
+              </Link>
+            </div>
+
+            {/* teaser cards */}
+            <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <div className="panel p-4 transition-colors hover:bg-slate-50">
+                <div className="text-sm text-slate-500">Fokus Layanan</div>
+                <div className="font-semibold text-slate-900">
+                  Warga & Wisata
+                </div>
+              </div>
+              <div className="panel p-4 transition-colors hover:bg-slate-50">
+                <div className="text-sm text-slate-500">Tema</div>
+                <div className="font-semibold text-slate-900">Biru kalem</div>
+              </div>
+              <div className="panel p-4 sm:col-span-1 col-span-2 transition-colors hover:bg-slate-50">
+                <div className="text-sm text-slate-500">Tip</div>
+                <div className="font-semibold text-slate-900">
+                  Gunakan menu atas untuk navigasi
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Kartu fitur */}
+          <div className="grid gap-4 sm:grid-cols-2 items-stretch">
+            <FeatureCard
+              href="/berita"
+              title="Berita Desa"
+              desc="Update kegiatan & pengumuman"
+              Icon={Newspaper}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            <FeatureCard
+              href="/umkm"
+              title="UMKM"
+              desc="Produk & jasa pelaku usaha lokal"
+              Icon={Store}
+            />
+            <FeatureCard
+              href="/wisata"
+              title="Potensi Wisata"
+              desc="Destinasi menarik di sekitar desa"
+              Icon={MapPin}
+            />
+            <FeatureCard
+              href="/kesehatan"
+              title="Layanan Kesehatan"
+              desc="Puskesmas, klinik, jadwal, kontak"
+              Icon={Stethoscope}
+            />
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+      </section>
+
+      {/* TAUTAN CEPAT */}
+      <section className="pb-14">
+        <h2 className="text-xl font-semibold mb-3 text-slate-900">
+          Tautan Cepat
+        </h2>
+        <div className="grid sm:grid-cols-3 gap-3 items-stretch">
+          <QuickLink href="/profil" label="Profil Desa" />
+          <QuickLink
+            href="/kontak-layanan"
+            label="Kontak & Layanan"
+            Icon={Phone}
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          <QuickLink href="/wisata" label="Peta & Rekomendasi" Icon={MapPin} />
+        </div>
+      </section>
     </div>
+  );
+}
+
+/** Kartu fitur kecil (putih, border tipis) */
+function FeatureCard({
+  href,
+  title,
+  desc,
+  Icon,
+}: {
+  href: string;
+  title: string;
+  desc: string;
+  Icon: React.ComponentType<{ size?: number; className?: string }>;
+}) {
+  return (
+    <Link
+      href={href}
+      className="panel h-full group p-4 rounded-xl transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-brand-300"
+    >
+      <div className="flex items-center gap-3">
+        <div className="rounded-lg border border-slate-200 bg-slate-50 p-2">
+          <Icon size={18} className="text-brand-700" />
+        </div>
+        <div className="font-semibold text-slate-900">{title}</div>
+      </div>
+      <p className="mt-2 text-sm text-slate-600">{desc}</p>
+      <div className="mt-3 text-sm underline underline-offset-4 decoration-slate-300 group-hover:decoration-slate-500">
+        Selengkapnya
+      </div>
+    </Link>
+  );
+}
+
+/** Tautan cepat (lebih sederhana) */
+function QuickLink({
+  href,
+  label,
+  Icon,
+}: {
+  href: string;
+  label: string;
+  Icon?: React.ComponentType<{ size?: number; className?: string }>;
+}) {
+  return (
+    <Link
+      href={href}
+      className="panel h-full p-4 rounded-xl transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-brand-300 flex items-center gap-3"
+    >
+      {Icon ? (
+        <span className="rounded-md border border-slate-200 bg-slate-50 p-2">
+          <Icon size={16} className="text-brand-700" />
+        </span>
+      ) : null}
+      <span className="font-medium text-slate-900">{label}</span>
+    </Link>
   );
 }

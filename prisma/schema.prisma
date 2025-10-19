@@ -1,0 +1,94 @@
+// prisma/schema.prisma
+
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ====================================================================
+// ADMIN & PENDUKUNG
+// ====================================================================
+
+// Digunakan untuk metadata admin dan Role-Based Access Control (RBAC)
+model AdminUser {
+  id            Int      @id @default(autoincrement())
+  email         String   @unique // Harus sama dengan email di Supabase Auth
+  // passwordHash disimpan di Supabase Auth, namun kolom ini bisa dipertahankan
+  // jika Anda ingin implementasi otentikasi kustom di masa depan.
+  passwordHash  String?
+  nama          String
+  role          String   @default("ADMIN_DESA") // ADMIN_DESA, SUPER_ADMIN, dll.
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// Untuk menampung pesan yang dikirimkan melalui form Kontak
+model PesanKontak {
+  id            Int      @id @default(autoincrement())
+  nama          String
+  email         String
+  subjek        String
+  pesan         String
+  tanggalKirim  DateTime @default(now())
+  isSudahDibaca Boolean  @default(false)
+}
+
+model KategoriUmkm {
+  id            Int      @id @default(autoincrement())
+  nama          String   @unique
+  umkms         Umkm[]
+}
+
+
+// ====================================================================
+// MODEL DATA PUBLIK
+// ====================================================================
+
+model Berita {
+  id            Int      @id @default(autoincrement())
+  judul         String
+  slug          String   @unique       // Untuk URL bersih: /berita/judul-berita
+  konten        String                 // Isi berita lengkap
+  gambarUtama   String?                // URL gambar utama
+  tanggalPublish DateTime @default(now())
+  isDraft       Boolean  @default(true) // True jika masih dalam proses penulisan
+  sumberEksternal String?                // Link ke sumber asli (jika ada)
+}
+
+model Umkm {
+  id            Int      @id @default(autoincrement())
+  nama          String
+  deskripsi     String?
+  alamat        String?
+  kontak        String?
+  gambar        String[]                 // Array URL gambar
+  gmapsLink     String?                  // Link Google Maps yang interaktif
+  kategori      KategoriUmkm @relation(fields: [kategoriId], references: [id])
+  kategoriId    Int
+}
+
+model Potensi {
+  id                  Int      @id @default(autoincrement())
+  nama                String
+  deskripsiSingkat    String?
+  deskripsiLengkap    String
+  lokasi              String?
+  gmapsLink           String?                  // Link Google Maps
+  gambarGaleri        String[]                 // Array URL gambar
+}
+
+model LayananKesehatan {
+  id            Int      @id @default(autoincrement())
+  namaFasilitas String
+  alamat        String?
+  jenisLayanan  String?
+  kontak        String?
+  jadwalBuka    String?  // Contoh: Senin-Jumat, 08:00 - 16:00
+  gmapsLink     String?                  // Link Google Maps
+}
