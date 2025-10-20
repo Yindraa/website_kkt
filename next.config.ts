@@ -4,11 +4,8 @@ import path from "path";
 
 const nextConfig: NextConfig = {
   typedRoutes: false,
-
   outputFileTracingRoot: path.join(__dirname),
-
   reactStrictMode: true,
-
   images: {
     formats: ["image/avif", "image/webp"],
     deviceSizes: [360, 640, 768, 1024, 1280, 1536, 1920],
