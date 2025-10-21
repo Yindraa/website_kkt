@@ -2,16 +2,20 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 
-export const revalidate = 60; // ISR 60 detik
+export const revalidate = 60; // ISR
 
 export default async function BeritaDetailPage({
   params,
 }: {
-  params: { slug: string };
+  // PERUBAHAN PENTING: params adalah Promise
+  params: Promise<{ slug: string }>;
 }) {
+  const { slug } = await params; // WAJIB di-await
+
   const data = await prisma.berita.findUnique({
-    where: { slug: params.slug },
+    where: { slug },
   });
+
   if (!data || data.isDraft) notFound();
 
   return (
@@ -20,15 +24,19 @@ export default async function BeritaDetailPage({
       <p className="text-sm text-slate-500">
         {new Date(data.tanggalPublish).toLocaleString("id-ID")}
       </p>
+
       {data.gambarUtama ? (
-        /* eslint-disable-next-line @next/next/no-img-element */
+        // biarkan <img> (atau ganti ke next/image kalau mau)
+        // eslint-disable-next-line @next/next/no-img-element
         <img
           src={data.gambarUtama}
           alt={data.judul}
           className="w-full rounded-lg"
         />
       ) : null}
+
       <div className="mt-4 whitespace-pre-wrap">{data.konten}</div>
+
       {data.sumberEksternal ? (
         <p className="mt-4">
           <a className="uline" href={data.sumberEksternal} target="_blank">
