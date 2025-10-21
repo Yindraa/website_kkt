@@ -1,89 +1,113 @@
 // src/app/(admin)/admin/berita/[id]/edit/page.tsx
 import { prisma } from "@/lib/prisma";
-import { notFound } from "next/navigation";
-import Link from "next/link";
-import Image from "next/image";
+import { revalidatePath } from "next/cache";
+import { notFound, redirect } from "next/navigation";
+import AdminBeritaForm, {
+  type FormState,
+} from "../../_components/AdminBeritaForm";
+import { ensureUniqueSlug, slugifyBase } from "@/lib/slug";
 
-export const dynamic = "force-dynamic";
+async function updateAction(
+  _prev: FormState,
+  formData: FormData
+): Promise<FormState> {
+  "use server";
+  try {
+    const id = Number(formData.get("id"));
+    const judul = String(formData.get("judul") || "").trim();
+    const konten = String(formData.get("konten") || "").trim();
+    const gambarUtama =
+      String(formData.get("gambarUtama") || "").trim() || null;
+    const sumberEksternal =
+      String(formData.get("sumberEksternal") || "").trim() || null;
+    const isDraft = formData.get("isDraft") === "on";
 
-type Params = { id: string };
+    if (!Number.isFinite(id) || id <= 0) {
+      return { ok: false, error: "ID tidak valid." };
+    }
+    if (!judul) return { ok: false, error: "Judul wajib diisi." };
+    if (!konten && !sumberEksternal) {
+      return { ok: false, error: "Isi konten atau cantumkan link sumber." };
+    }
+    if (sumberEksternal) {
+      try {
+        const u = new URL(sumberEksternal);
+        if (!/^https?:$/.test(u.protocol)) throw new Error();
+      } catch {
+        return { ok: false, error: "URL sumber tidak valid." };
+      }
+    }
+
+    const existing = await prisma.berita.findUnique({ where: { id } });
+    if (!existing) return { ok: false, error: "Data tidak ditemukan." };
+
+    // Regenerate slug hanya jika judul berubah
+    let slug = existing.slug;
+    if (existing.judul !== judul) {
+      const base = slugifyBase(judul);
+      slug = await ensureUniqueSlug(prisma, base, id);
+    }
+
+    await prisma.berita.update({
+      where: { id },
+      data: { judul, slug, konten, gambarUtama, isDraft, sumberEksternal },
+    });
+
+    // Revalidate publik & admin
+    revalidatePath("/berita");
+    revalidatePath(`/berita/${slug}`);
+    revalidatePath("/admin/berita");
+
+    // Tetap di halaman edit
+    redirect(`/admin/berita/${id}/edit`);
+  } catch (err: unknown) {
+    return { ok: false, error: (err as Error)?.message ?? "Gagal menyimpan." };
+  }
+}
 
 export default async function AdminBeritaEditPage({
   params,
 }: {
-  // ⬅️ Next 15: params adalah Promise
-  params: Promise<Params>;
+  // Next 15: params adalah Promise dan harus di-await
+  params: Promise<{ id: string }>;
 }) {
-  const { id: idStr } = await params; // ⬅️ WAJIB di-await
-  const id = Number(idStr);
-  if (!Number.isFinite(id)) notFound();
+  const { id } = await params;
+  const numId = Number(id);
 
-  const berita = await prisma.berita.findUnique({
-    where: { id },
-    select: {
-      id: true,
-      judul: true,
-      slug: true,
-      konten: true,
-      gambarUtama: true,
-      isDraft: true,
-      tanggalPublish: true,
-    },
-  });
+  if (!Number.isFinite(numId) || numId <= 0) notFound();
 
-  if (!berita) notFound();
+  const data = await prisma.berita.findUnique({ where: { id: numId } });
+  if (!data) notFound();
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Edit Berita</h1>
-        <Link href="/admin/berita" className="uline">
-          ← Kembali ke daftar
-        </Link>
-      </div>
+    <div className="max-w-3xl">
+      <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
+        Edit Berita
+      </h1>
 
-      <div className="rounded-xl border border-slate-200 bg-white p-4 space-y-2">
-        <div>
-          <span className="text-slate-500">ID:</span> {berita.id}
-        </div>
-        <div>
-          <span className="text-slate-500">Judul:</span> {berita.judul}
-        </div>
-        <div>
-          <span className="text-slate-500">Slug:</span> {berita.slug}
-        </div>
-        <div>
-          <span className="text-slate-500">Status:</span>{" "}
-          {berita.isDraft ? "Draft" : "Terbit"}
-        </div>
-        <div>
-          <span className="text-slate-500">Tanggal:</span>{" "}
-          {berita.tanggalPublish
-            ? new Date(berita.tanggalPublish).toLocaleString("id-ID")
-            : "-"}
-        </div>
-      </div>
+      <AdminBeritaForm
+        action={updateAction}
+        initial={{
+          id: data.id,
+          judul: data.judul,
+          konten: data.konten,
+          gambarUtama: data.gambarUtama,
+          isDraft: data.isDraft,
+          sumberEksternal: data.sumberEksternal,
+        }}
+        submitLabel="Simpan Perubahan"
+      />
 
-      <div className="rounded-xl border border-slate-200 bg-white p-4">
-        <div className="text-slate-500 mb-1">Konten:</div>
-        <pre className="whitespace-pre-wrap text-slate-800">
-          {berita.konten}
-        </pre>
+      <div className="mt-4 flex gap-2">
+        <a
+          href={`/berita/${data.slug}`}
+          target="_blank"
+          className="btn btn-ghost"
+          rel="noreferrer"
+        >
+          Lihat Halaman
+        </a>
       </div>
-
-      {berita.gambarUtama ? (
-        <div className="rounded-xl border border-slate-200 bg-white p-4">
-          <div className="text-slate-500 mb-2">Gambar Utama:</div>
-          <Image
-            src={berita.gambarUtama}
-            alt={berita.judul}
-            width={1200}
-            height={630}
-            className="max-w-full rounded-lg h-auto"
-            unoptimized
-          />
-        </div>
-      ) : null}
     </div>
   );
 }

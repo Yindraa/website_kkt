@@ -1,29 +1,65 @@
 // src/app/(admin)/admin/berita/new/page.tsx
-import Link from "next/link";
+import { prisma } from "@/lib/prisma";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import AdminBeritaForm, {
+  type FormState,
+} from "../_components/AdminBeritaForm";
+import { ensureUniqueSlug, slugifyBase } from "@/lib/slug";
 
-export const dynamic = "force-dynamic";
+async function createAction(
+  _prev: FormState,
+  formData: FormData
+): Promise<FormState> {
+  "use server";
+  try {
+    const judul = String(formData.get("judul") || "").trim();
+    const konten = String(formData.get("konten") || "").trim();
+    const gambarUtama =
+      String(formData.get("gambarUtama") || "").trim() || null;
+    const sumberEksternal =
+      String(formData.get("sumberEksternal") || "").trim() || null;
+    const isDraft = formData.get("isDraft") === "on";
+
+    if (!judul) return { ok: false, error: "Judul wajib diisi." };
+    if (!konten && !sumberEksternal) {
+      return { ok: false, error: "Isi konten atau cantumkan link sumber." };
+    }
+    if (sumberEksternal) {
+      try {
+        const u = new URL(sumberEksternal);
+        if (!/^https?:$/.test(u.protocol)) throw new Error();
+      } catch {
+        return { ok: false, error: "URL sumber tidak valid." };
+      }
+    }
+
+    const base = slugifyBase(judul);
+    const slug = await ensureUniqueSlug(prisma, base);
+
+    const row = await prisma.berita.create({
+      data: { judul, slug, konten, gambarUtama, isDraft, sumberEksternal },
+      select: { id: true, slug: true, isDraft: true },
+    });
+
+    // Revalidate halaman publik & admin
+    revalidatePath("/berita");
+    if (!row.isDraft) revalidatePath(`/berita/${row.slug}`);
+    revalidatePath("/admin/berita");
+
+    redirect(`/admin/berita/${row.id}/edit`);
+  } catch (err: unknown) {
+    return { ok: false, error: (err as Error).message ?? "Gagal menyimpan." };
+  }
+}
 
 export default function AdminBeritaNewPage() {
-  // Halaman placeholder pembuatan berita baru.
-  // Nanti bisa kamu ganti ke form client component + server action.
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Tambah Berita</h1>
-        <Link href="/admin/berita" className="uline">
-          ← Kembali ke daftar
-        </Link>
-      </div>
-
-      <div className="rounded-xl border border-slate-200 bg-white p-4">
-        <p className="text-slate-700">
-          Form tambah berita akan diletakkan di sini (judul, slug, konten,
-          gambar, status draft/terbit).
-        </p>
-        <p className="mt-2 text-sm text-slate-500">
-          (Sementara placeholder agar build sukses.)
-        </p>
-      </div>
+    <div className="max-w-3xl">
+      <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
+        Tambah Berita
+      </h1>
+      <AdminBeritaForm action={createAction} submitLabel="Simpan" />
     </div>
   );
 }

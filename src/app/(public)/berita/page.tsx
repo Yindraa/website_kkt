@@ -4,12 +4,11 @@ import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 
-export const dynamic = "force-dynamic"; // atau ubah ke ISR sesuai kebutuhan
+export const dynamic = "force-dynamic";
 
 type SP = { q?: string; page?: string };
 
 export default async function BeritaListPage({
-  // Next 15: searchParams adalah Promise
   searchParams,
 }: {
   searchParams: Promise<SP>;
@@ -49,6 +48,7 @@ export default async function BeritaListPage({
         slug: true,
         gambarUtama: true,
         tanggalPublish: true,
+        sumberEksternal: true,
       },
     }),
     prisma.berita.count({ where }),
@@ -62,7 +62,6 @@ export default async function BeritaListPage({
         Berita Desa
       </h1>
 
-      {/* Pencarian */}
       <form className="mt-4 flex gap-2">
         <input
           name="q"
@@ -73,7 +72,6 @@ export default async function BeritaListPage({
         <button className="btn btn-primary">Cari</button>
       </form>
 
-      {/* Grid Berita */}
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {rows.map((b) => (
           <article key={b.id} className="panel p-4 flex flex-col">
@@ -96,12 +94,22 @@ export default async function BeritaListPage({
               {new Date(b.tanggalPublish).toLocaleDateString("id-ID")}
             </div>
 
-            <Link
-              className="uline mt-2 inline-block"
-              href={`/berita/${b.slug}`}
-            >
-              Baca selengkapnya →
-            </Link>
+            {b.sumberEksternal ? (
+              <a
+                className="uline mt-2 inline-block"
+                href={b.sumberEksternal}
+                target="_blank"
+              >
+                Baca di sumber →
+              </a>
+            ) : (
+              <Link
+                className="uline mt-2 inline-block"
+                href={`/berita/${b.slug}`}
+              >
+                Baca selengkapnya →
+              </Link>
+            )}
           </article>
         ))}
       </div>

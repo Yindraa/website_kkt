@@ -1,21 +1,28 @@
+// src/app/(admin)/admin/login/page.tsx
 import { Suspense } from "react";
-import { Metadata } from "next";
 import LoginForm from "./LoginForm";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-export const metadata: Metadata = {
-  title: "Login Admin",
-};
-
 export default function AdminLoginPage() {
   return (
-    <div className="mx-auto max-w-sm py-16">
-      <h1 className="text-2xl font-bold mb-4">Login Admin</h1>
-      <Suspense fallback={<div className="text-slate-600">Memuat…</div>}>
+    <main className="min-h-[calc(100vh-4rem)] grid place-items-center px-4 py-10">
+      <Suspense
+        // fallback ringan agar menghilangkan warning "missing suspense"
+        fallback={
+          <div className="w-full max-w-sm animate-pulse">
+            <div className="h-8 w-40 bg-slate-200 rounded mb-4" />
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 space-y-3">
+              <div className="h-10 bg-slate-100 rounded" />
+              <div className="h-10 bg-slate-100 rounded" />
+              <div className="h-10 bg-slate-100 rounded" />
+            </div>
+          </div>
+        }
+      >
         <LoginForm />
       </Suspense>
-    </div>
+    </main>
   );
 }

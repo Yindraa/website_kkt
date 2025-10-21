@@ -5,13 +5,16 @@ export const fetchCache = "force-no-store";
 
 import { redirect } from "next/navigation";
 import { getSupabaseServer } from "@/lib/supabaseServer";
+import AdminShell from "@/app/(admin)/_components/AdminShell";
+import type { ReactNode } from "react";
 
 export default async function ProtectedLayout({
   children,
 }: {
-  children: React.ReactNode; // gunakan React.ReactNode langsung tanpa import
+  children: ReactNode;
 }) {
-  const supabase = await getSupabaseServer();
+  // getSupabaseServer() adalah async (RSC: await cookies()), jadi WAJIB await
+  const supabase = await getSupabaseServer(); // READ-ONLY client
 
   const {
     data: { user },
@@ -21,5 +24,5 @@ export default async function ProtectedLayout({
     redirect("/admin/login?redirect=/admin");
   }
 
-  return <>{children}</>;
+  return <AdminShell>{children}</AdminShell>;
 }
