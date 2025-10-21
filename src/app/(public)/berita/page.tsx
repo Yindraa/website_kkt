@@ -138,31 +138,54 @@ function Pagination({
     return `/berita?${usp.toString()}`;
   };
 
+  const baseBtn =
+    "inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white " +
+    "px-3 py-1.5 text-xs sm:text-sm sm:px-4 sm:py-2 hover:bg-slate-50 transition-colors";
+
+  const disabledBtn =
+    "inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white " +
+    "px-3 py-1.5 text-xs sm:text-sm sm:px-4 sm:py-2 opacity-50 pointer-events-none";
+
   return (
-    <div className="mt-6 flex items-center justify-center gap-2">
+    <nav className="mt-6 flex items-center justify-center gap-2">
+      {/* Prev */}
       {page > 1 ? (
-        <Link href={qParam(prev)} className="btn btn-ghost">
-          « Sebelumnya
-        </Link>
+        <a
+          href={qParam(prev)}
+          className={baseBtn}
+          aria-label="Halaman sebelumnya"
+        >
+          <span className="sm:hidden">‹</span>
+          <span className="hidden sm:inline">« Sebelumnya</span>
+        </a>
       ) : (
-        <span className="btn btn-ghost pointer-events-none opacity-50">
-          « Sebelumnya
+        <span className={disabledBtn} aria-hidden="true">
+          <span className="sm:hidden">‹</span>
+          <span className="hidden sm:inline">« Sebelumnya</span>
         </span>
       )}
 
-      <span className="text-sm text-slate-600">
-        Halaman {page} / {totalPages}
+      {/* Indicator */}
+      <span className="mx-1 select-none text-[11px] sm:text-sm text-slate-600">
+        {page} / {totalPages}
       </span>
 
+      {/* Next */}
       {page < totalPages ? (
-        <Link href={qParam(next)} className="btn btn-ghost">
-          Berikutnya »
-        </Link>
+        <a
+          href={qParam(next)}
+          className={baseBtn}
+          aria-label="Halaman berikutnya"
+        >
+          <span className="sm:hidden">›</span>
+          <span className="hidden sm:inline">Berikutnya »</span>
+        </a>
       ) : (
-        <span className="btn btn-ghost pointer-events-none opacity-50">
-          Berikutnya »
+        <span className={disabledBtn} aria-hidden="true">
+          <span className="sm:hidden">›</span>
+          <span className="hidden sm:inline">Berikutnya »</span>
         </span>
       )}
-    </div>
+    </nav>
   );
 }

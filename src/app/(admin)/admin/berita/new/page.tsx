@@ -1,7 +1,7 @@
-// src/app/(admin)/admin/berita/new/page.tsx
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import AdminHeader from "@/app/(admin)/_components/AdminHeader";
 import AdminBeritaForm, {
   type FormState,
 } from "../_components/AdminBeritaForm";
@@ -56,9 +56,16 @@ async function createAction(
 export default function AdminBeritaNewPage() {
   return (
     <div className="max-w-3xl">
-      <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
-        Tambah Berita
-      </h1>
+      <AdminHeader
+        title="Tambah Berita"
+        breadcrumbs={[
+          { label: "Dashboard", href: "/admin" },
+          { label: "Berita", href: "/admin/berita" },
+          { label: "Tambah" },
+        ]}
+        backHref="/admin/berita"
+      />
+
       <AdminBeritaForm action={createAction} submitLabel="Simpan" />
     </div>
   );

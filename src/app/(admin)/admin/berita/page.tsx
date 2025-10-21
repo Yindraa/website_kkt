@@ -1,7 +1,7 @@
-// src/app/(admin)/admin/berita/page.tsx
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import AdminHeader from "../../_components/AdminHeader";
 
 async function deleteAction(formData: FormData) {
   "use server";
@@ -21,25 +21,25 @@ export default async function AdminBeritaListPage() {
       slug: true,
       isDraft: true,
       tanggalPublish: true,
-      sumberEksternal: true, // ⬅️ tampilkan indikator sumber
+      sumberEksternal: true,
     },
   });
 
   return (
     <div className="space-y-6">
-      <header className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
-            Kelola Berita
-          </h1>
-          <p className="text-slate-600">
-            Tambahkan, ubah, atau hapus berita desa.
-          </p>
-        </div>
-        <Link href="/admin/berita/new" className="btn btn-primary">
-          + Tambah
-        </Link>
-      </header>
+      <AdminHeader
+        title="Kelola Berita"
+        breadcrumbs={[
+          { label: "Dashboard", href: "/admin" },
+          { label: "Berita" },
+        ]}
+        backHref="/admin"
+        actions={
+          <Link href="/admin/berita/new" className="btn btn-primary">
+            + Tambah Berita
+          </Link>
+        }
+      />
 
       <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
         <table className="min-w-full text-sm">
@@ -99,6 +99,7 @@ export default async function AdminBeritaListPage() {
                         href={b.sumberEksternal}
                         target="_blank"
                         className="btn btn-ghost"
+                        rel="noreferrer"
                       >
                         Sumber
                       </a>

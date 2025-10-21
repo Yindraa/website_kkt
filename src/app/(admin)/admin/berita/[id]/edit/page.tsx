@@ -1,7 +1,7 @@
-// src/app/(admin)/admin/berita/[id]/edit/page.tsx
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { notFound, redirect } from "next/navigation";
+import AdminHeader from "@/app/(admin)/_components/AdminHeader";
 import AdminBeritaForm, {
   type FormState,
 } from "../../_components/AdminBeritaForm";
@@ -81,9 +81,25 @@ export default async function AdminBeritaEditPage({
 
   return (
     <div className="max-w-3xl">
-      <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
-        Edit Berita
-      </h1>
+      <AdminHeader
+        title="Edit Berita"
+        breadcrumbs={[
+          { label: "Dashboard", href: "/admin" },
+          { label: "Berita", href: "/admin/berita" },
+          { label: "Edit" },
+        ]}
+        backHref="/admin/berita"
+        actions={
+          <a
+            href={`/berita/${data.slug}`}
+            target="_blank"
+            rel="noreferrer"
+            className="btn btn-ghost"
+          >
+            Lihat Halaman
+          </a>
+        }
+      />
 
       <AdminBeritaForm
         action={updateAction}
@@ -97,17 +113,6 @@ export default async function AdminBeritaEditPage({
         }}
         submitLabel="Simpan Perubahan"
       />
-
-      <div className="mt-4 flex gap-2">
-        <a
-          href={`/berita/${data.slug}`}
-          target="_blank"
-          className="btn btn-ghost"
-          rel="noreferrer"
-        >
-          Lihat Halaman
-        </a>
-      </div>
     </div>
   );
 }
