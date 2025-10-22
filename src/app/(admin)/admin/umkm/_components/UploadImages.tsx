@@ -31,6 +31,14 @@ export default function UploadImages({
 
     try {
       const supabase = supabaseBrowser;
+
+      // Pastikan user TERautentikasi (INSERT policy biasanya TO authenticated)
+      const { data: sess } = await supabase.auth.getSession();
+      if (!sess?.session) {
+        setErr("Sesi login berakhir. Silakan login ulang sebelum mengunggah.");
+        return;
+      }
+
       const uploaded: string[] = [];
 
       for (const file of Array.from(files)) {
@@ -39,17 +47,17 @@ export default function UploadImages({
           continue;
         }
 
-        // path: <bucket>/<YYYY>/<MM>/<timestamp>-<uuid>-<filename>
+        // folder pertama WAJIB 'public' agar lolos policy:
+        // path: public/<YYYY>/<MM>/<timestamp>-<uuid>-<filename>
         const now = new Date();
         const y = now.getFullYear();
         const m = String(now.getMonth() + 1).padStart(2, "0");
         const uuid =
           globalThis.crypto?.randomUUID?.() ??
           Math.random().toString(36).slice(2);
-        const path = `${y}/${m}/${Date.now()}-${uuid}-${file.name}`.replace(
-          /\s+/g,
-          "-"
-        );
+
+        const safeName = file.name.replace(/\s+/g, "-");
+        const path = `public/${y}/${m}/${Date.now()}-${uuid}-${safeName}`;
 
         const { error: upErr } = await supabase.storage
           .from(bucket)
@@ -60,11 +68,12 @@ export default function UploadImages({
           });
 
         if (upErr) {
+          // contoh error RLS di hosting: "new row violates row-level security policy"
           setErr(upErr.message);
           continue;
         }
 
-        // Public URL (bucket kita public read)
+        // Ambil public URL (bucket diset public READ)
         const { data } = supabase.storage.from(bucket).getPublicUrl(path);
         if (data?.publicUrl) uploaded.push(data.publicUrl);
       }
@@ -76,7 +85,7 @@ export default function UploadImages({
       setErr((e as Error)?.message ?? "Gagal upload gambar");
     } finally {
       setUploading(false);
-      // reset input (gunakan ref agar tidak null)
+      // reset input (pakai ref supaya tidak null)
       if (inputRef.current) inputRef.current.value = "";
     }
   }
