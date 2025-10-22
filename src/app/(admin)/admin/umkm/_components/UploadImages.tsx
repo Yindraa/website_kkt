@@ -1,0 +1,142 @@
+"use client";
+
+import { useRef, useState } from "react";
+import Image from "next/image";
+import { supabaseBrowser } from "@/lib/supabaseBrowser";
+
+type Props = {
+  name: string; // nama input hidden (array), mis. "gambar"
+  defaultUrls?: string[]; // url2 awal (mode edit)
+  label?: string;
+  bucket: "umkm" | "berita"; // bucket supabase storage
+};
+
+export default function UploadImages({
+  name,
+  defaultUrls = [],
+  label = "Galeri Gambar",
+  bucket,
+}: Props) {
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const [urls, setUrls] = useState<string[]>(defaultUrls);
+  const [uploading, setUploading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  async function onPickFiles(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setErr(null);
+    setUploading(true);
+
+    try {
+      const supabase = supabaseBrowser;
+      const uploaded: string[] = [];
+
+      for (const file of Array.from(files)) {
+        if (!file.type.startsWith("image/")) {
+          setErr("Semua file harus berupa gambar.");
+          continue;
+        }
+
+        // path: <bucket>/<YYYY>/<MM>/<timestamp>-<uuid>-<filename>
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = String(now.getMonth() + 1).padStart(2, "0");
+        const uuid =
+          globalThis.crypto?.randomUUID?.() ??
+          Math.random().toString(36).slice(2);
+        const path = `${y}/${m}/${Date.now()}-${uuid}-${file.name}`.replace(
+          /\s+/g,
+          "-"
+        );
+
+        const { error: upErr } = await supabase.storage
+          .from(bucket)
+          .upload(path, file, {
+            cacheControl: "3600",
+            upsert: false,
+            contentType: file.type,
+          });
+
+        if (upErr) {
+          setErr(upErr.message);
+          continue;
+        }
+
+        // Public URL (bucket kita public read)
+        const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+        if (data?.publicUrl) uploaded.push(data.publicUrl);
+      }
+
+      if (uploaded.length) {
+        setUrls((prev) => [...prev, ...uploaded]);
+      }
+    } catch (e) {
+      setErr((e as Error)?.message ?? "Gagal upload gambar");
+    } finally {
+      setUploading(false);
+      // reset input (gunakan ref agar tidak null)
+      if (inputRef.current) inputRef.current.value = "";
+    }
+  }
+
+  function removeAt(idx: number) {
+    setUrls((prev) => prev.filter((_, i) => i !== idx));
+  }
+
+  return (
+    <div className="space-y-2">
+      <label className="block text-sm text-slate-600">{label}</label>
+
+      {/* hidden inputs untuk mengirim array ke server action */}
+      {urls.map((u, i) => (
+        <input key={i} type="hidden" name={name} value={u} />
+      ))}
+
+      <div className="flex items-center gap-3">
+        <label className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm hover:bg-slate-50 cursor-pointer">
+          <input
+            ref={inputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={onPickFiles}
+            className="hidden"
+          />
+          {uploading ? "Mengunggah..." : "Pilih Gambar"}
+        </label>
+        <span className="text-xs text-slate-500">
+          {urls.length} gambar terpilih
+        </span>
+      </div>
+
+      {err && <p className="text-sm text-red-600">{err}</p>}
+
+      {urls.length > 0 && (
+        <div className="mt-2 grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {urls.map((u, i) => (
+            <div key={i} className="relative group">
+              <Image
+                src={u}
+                alt={`Gambar ${i + 1}`}
+                width={600}
+                height={338}
+                className="rounded-lg border border-slate-200 h-32 w-full object-cover"
+                unoptimized
+              />
+              <button
+                type="button"
+                onClick={() => removeAt(i)}
+                className="absolute top-2 right-2 rounded bg-black/60 text-white text-xs px-2 py-1 opacity-0 group-hover:opacity-100 transition"
+                aria-label="Hapus gambar"
+              >
+                Hapus
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

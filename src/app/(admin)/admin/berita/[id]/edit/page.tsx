@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { notFound, redirect } from "next/navigation";
-import AdminHeader from "@/app/(admin)/_components/AdminHeader";
+import { notFound } from "next/navigation";
 import AdminBeritaForm, {
   type FormState,
 } from "../../_components/AdminBeritaForm";
@@ -58,8 +57,8 @@ async function updateAction(
     revalidatePath(`/berita/${slug}`);
     revalidatePath("/admin/berita");
 
-    // Tetap di halaman edit
-    redirect(`/admin/berita/${id}/edit`);
+    // ⬇️ kembali ke list Kelola Berita
+    return { ok: true, redirectTo: "/admin/berita" };
   } catch (err: unknown) {
     return { ok: false, error: (err as Error)?.message ?? "Gagal menyimpan." };
   }
@@ -68,7 +67,6 @@ async function updateAction(
 export default async function AdminBeritaEditPage({
   params,
 }: {
-  // Next 15: params adalah Promise dan harus di-await
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
@@ -81,25 +79,9 @@ export default async function AdminBeritaEditPage({
 
   return (
     <div className="max-w-3xl">
-      <AdminHeader
-        title="Edit Berita"
-        breadcrumbs={[
-          { label: "Dashboard", href: "/admin" },
-          { label: "Berita", href: "/admin/berita" },
-          { label: "Edit" },
-        ]}
-        backHref="/admin/berita"
-        actions={
-          <a
-            href={`/berita/${data.slug}`}
-            target="_blank"
-            rel="noreferrer"
-            className="btn btn-ghost"
-          >
-            Lihat Halaman
-          </a>
-        }
-      />
+      <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
+        Edit Berita
+      </h1>
 
       <AdminBeritaForm
         action={updateAction}
@@ -113,6 +95,17 @@ export default async function AdminBeritaEditPage({
         }}
         submitLabel="Simpan Perubahan"
       />
+
+      <div className="mt-4 flex gap-2">
+        <a
+          href={`/berita/${data.slug}`}
+          target="_blank"
+          className="btn btn-ghost"
+          rel="noreferrer"
+        >
+          Lihat Halaman
+        </a>
+      </div>
     </div>
   );
 }

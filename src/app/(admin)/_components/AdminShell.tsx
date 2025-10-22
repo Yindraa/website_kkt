@@ -4,7 +4,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { LayoutGrid, Newspaper, LogOut, Menu } from "lucide-react";
+import { LayoutGrid, Newspaper, LogOut, Menu, Store } from "lucide-react";
 
 export default function AdminShell({
   children,
@@ -17,8 +17,7 @@ export default function AdminShell({
   const nav = [
     { href: "/admin", label: "Dashboard", icon: LayoutGrid },
     { href: "/admin/berita", label: "Berita", icon: Newspaper },
-    // Tambahkan modul lain saat siap:
-    // { href: "/admin/umkm", label: "UMKM", icon: Store },
+    { href: "/admin/umkm", label: "UMKM", icon: Store },
     // { href: "/admin/wisata", label: "Wisata", icon: MapPin },
     // { href: "/admin/kesehatan", label: "Kesehatan", icon: Stethoscope },
     // { href: "/admin/pengaturan", label: "Pengaturan", icon: Settings },

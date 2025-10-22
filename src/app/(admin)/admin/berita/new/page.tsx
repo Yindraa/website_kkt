@@ -1,7 +1,5 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
-import AdminHeader from "@/app/(admin)/_components/AdminHeader";
 import AdminBeritaForm, {
   type FormState,
 } from "../_components/AdminBeritaForm";
@@ -37,17 +35,17 @@ async function createAction(
     const base = slugifyBase(judul);
     const slug = await ensureUniqueSlug(prisma, base);
 
-    const row = await prisma.berita.create({
+    await prisma.berita.create({
       data: { judul, slug, konten, gambarUtama, isDraft, sumberEksternal },
       select: { id: true, slug: true, isDraft: true },
     });
 
     // Revalidate halaman publik & admin
     revalidatePath("/berita");
-    if (!row.isDraft) revalidatePath(`/berita/${row.slug}`);
     revalidatePath("/admin/berita");
 
-    redirect(`/admin/berita/${row.id}/edit`);
+    // ⬇️ Kembalikan tujuan redirect (ke list Kelola Berita)
+    return { ok: true, redirectTo: "/admin/berita" };
   } catch (err: unknown) {
     return { ok: false, error: (err as Error).message ?? "Gagal menyimpan." };
   }
@@ -56,16 +54,9 @@ async function createAction(
 export default function AdminBeritaNewPage() {
   return (
     <div className="max-w-3xl">
-      <AdminHeader
-        title="Tambah Berita"
-        breadcrumbs={[
-          { label: "Dashboard", href: "/admin" },
-          { label: "Berita", href: "/admin/berita" },
-          { label: "Tambah" },
-        ]}
-        backHref="/admin/berita"
-      />
-
+      <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
+        Tambah Berita
+      </h1>
       <AdminBeritaForm action={createAction} submitLabel="Simpan" />
     </div>
   );

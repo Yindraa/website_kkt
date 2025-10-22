@@ -1,10 +1,11 @@
 "use client";
 
-import { useActionState, useState, FormEvent, useTransition } from "react";
+import { useActionState, useState, FormEvent, startTransition } from "react";
+import { useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabaseBrowser";
 
 export type FormState =
-  | { ok: true; slug?: string }
+  | { ok: true; redirectTo?: string }
   | { ok: false; error: string };
 
 type Initial = {
@@ -25,13 +26,19 @@ export default function AdminBeritaForm({
   initial?: Initial;
   submitLabel?: string;
 }) {
-  // Action state (Next 15)
-  const [state, formAction] = useActionState<FormState, FormData>(action, {
-    ok: true,
-  });
+  const router = useRouter();
 
-  // Transition state agar aman memanggil formAction
-  const [isPending, startTransition] = useTransition();
+  // Bungkus server action di dalam reducer untuk useActionState
+  const [state, formAction] = useActionState<FormState, FormData>(
+    async (prev, fd) => {
+      const res = await action(prev, fd);
+      if (res.ok && res.redirectTo) {
+        startTransition(() => router.push(res.redirectTo!));
+      }
+      return res; // penting: kembalikan FormState agar state terbarui
+    },
+    { ok: true }
+  );
 
   // Local UI state
   const [isUploading, setUploading] = useState(false);
@@ -41,22 +48,17 @@ export default function AdminBeritaForm({
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-
     const fd = new FormData(e.currentTarget);
 
-    // 1) Ambil file (jika ada)
+    // Upload file (opsional)
     const file = fd.get("gambarFile") as File | null;
-
     if (file && file.size > 0) {
-      // Validasi ringan
       if (!file.type.startsWith("image/")) {
         alert("File harus berupa gambar.");
         return;
       }
-
       setUploading(true);
 
-      // 2) Upload ke bucket 'berita/public/...'
       const fileName = `${Date.now()}-${file.name}`.replace(/\s+/g, "-");
       const path = `public/${fileName}`;
 
@@ -76,24 +78,24 @@ export default function AdminBeritaForm({
         return;
       }
 
-      // 3) Ambil public URL
       const { data: pub } = supabaseBrowser.storage
         .from("berita")
         .getPublicUrl(up.path);
 
-      // 4) Set ke form data sebagai 'gambarUtama'
       if (pub?.publicUrl) {
         fd.set("gambarUtama", pub.publicUrl);
       }
     }
 
-    // Buang field file supaya tidak ikut dilempar ke server action
+    // Jangan kirim field file ke server action
     fd.delete("gambarFile");
 
-    // 5) Jalankan server action di dalam transition (tidak di-await)
-    startTransition(() => {
-      void formAction(fd);
-    });
+    // Penting: JANGAN await (formAction tidak mengembalikan nilai)
+    formAction(fd);
+  }
+
+  function getErrorMessage(s: FormState): string | null {
+    return s.ok ? null : s.error;
   }
 
   return (
@@ -132,7 +134,6 @@ export default function AdminBeritaForm({
               }
             }}
           />
-          {/* Hidden field untuk URL hasil upload */}
           <input
             type="hidden"
             name="gambarUtama"
@@ -188,10 +189,12 @@ export default function AdminBeritaForm({
         <span className="text-sm text-slate-700">Simpan sebagai draft</span>
       </label>
 
-      {!state.ok && <p className="text-sm text-red-600">{state.error}</p>}
+      {!state.ok && (
+        <p className="text-sm text-red-600">{getErrorMessage(state)}</p>
+      )}
 
       <div className="pt-2 flex items-center gap-2">
-        <button className="btn btn-primary" disabled={isUploading || isPending}>
+        <button className="btn btn-primary" disabled={isUploading}>
           {isUploading ? "Mengunggah…" : submitLabel}
         </button>
       </div>

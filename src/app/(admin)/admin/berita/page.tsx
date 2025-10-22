@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import AdminHeader from "../../_components/AdminHeader";
+import AdminHeader from "@/app/(admin)/_components/AdminHeader";
 
 async function deleteAction(formData: FormData) {
   "use server";

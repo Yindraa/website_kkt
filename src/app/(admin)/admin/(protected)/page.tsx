@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import AdminHeader from "../../_components/AdminHeader";
+import AdminHeader from "@/app/(admin)/_components/AdminHeader";
 
 export const revalidate = 0;
 
