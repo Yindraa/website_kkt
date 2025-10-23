@@ -1,24 +1,29 @@
-// src/sections/profil/components/VisionMission.tsx
-export default function VisionMission() {
+// src/sections/profil/VisionMissions.tsx
+"use client";
+
+export default function VisionMissions({
+  visi,
+  misi,
+}: {
+  visi: string;
+  misi: string[];
+}) {
   return (
-    <section className="panel p-6">
-      <h2 className="font-semibold text-slate-900">Visi & Misi</h2>
-      <div className="mt-3 grid gap-6 sm:grid-cols-2">
-        <div>
-          <div className="text-sm text-slate-500">Visi</div>
-          <p className="mt-1 font-medium text-slate-900">
-            “Menjadi desa yang maju, mandiri, dan sejahtera berlandaskan gotong
-            royong.”
-          </p>
-        </div>
-        <div>
-          <div className="text-sm text-slate-500">Misi</div>
-          <ul className="mt-1 list-disc pl-5 text-slate-600 space-y-1">
-            <li>Peningkatan layanan publik yang cepat dan transparan.</li>
-            <li>Pemberdayaan UMKM & ekonomi kreatif berbasis potensi lokal.</li>
-            <li>Penguatan ketahanan sosial, kesehatan, dan pendidikan.</li>
-          </ul>
-        </div>
+    <section className="panel p-5 space-y-4">
+      <h2 className="text-xl font-bold text-slate-900">Visi & Misi</h2>
+
+      <div>
+        <h3 className="font-semibold text-slate-800">Visi</h3>
+        <p className="mt-1 text-slate-700">{visi}</p>
+      </div>
+
+      <div>
+        <h3 className="font-semibold text-slate-800">Misi</h3>
+        <ol className="mt-1 list-decimal pl-5 space-y-1 text-slate-700">
+          {misi.map((item, i) => (
+            <li key={i}>{item}</li>
+          ))}
+        </ol>
       </div>
     </section>
   );

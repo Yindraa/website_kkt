@@ -26,8 +26,8 @@ export default function Footer() {
             <span>Minahasa, Sulawesi Utara</span>
           </div>
           <p className="text-white/70 text-sm leading-relaxed">
-            Portal informasi resmi desa: berita, UMKM, wisata, layanan
-            kesehatan, dan kontak layanan.
+            Portal informasi resmi desa: Berita, UMKM, Wisata, Layanan
+            Kesehatan, dan Kontak Layanan.
           </p>
         </div>
 
@@ -52,15 +52,15 @@ export default function Footer() {
           <div className="text-sm text-white/80">Kontak</div>
           <div className="text-white/90 flex md:justify-end items-center gap-2">
             <Phone size={16} className="opacity-80" />
-            <span>0431-987654</span>
+            <span>0851-7433-1388</span>
           </div>
           <div className="text-white/90 flex md:justify-end items-center gap-2">
             <Mail size={16} className="opacity-80" />
             <a
-              href="mailto:admin@leilem.desa.id"
+              href="mailto:www.desaleilem@yahoo.co.id"
               className="underline underline-offset-4 decoration-white/40 hover:decoration-white"
             >
-              admin@leilem.desa.id
+              www.desaleilem@yahoo.co.id
             </a>
           </div>
         </div>
@@ -71,7 +71,7 @@ export default function Footer() {
 
       {/* BOTTOM BAR */}
       <div className="mx-auto max-w-6xl px-4 h-12 flex flex-col sm:flex-row items-center justify-between gap-2 text-sm text-white/80">
-        <div>© {new Date().getFullYear()} Website Desa</div>
+        <div>© {new Date().getFullYear()} Website Desa Leilem</div>
         <div className="text-white/70">Dibuat dengan Next.js + Tailwind</div>
       </div>
     </footer>

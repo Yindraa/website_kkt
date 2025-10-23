@@ -57,14 +57,16 @@ export default function Home() {
             </div>
             <div>
               <div className="text-sm text-slate-500">Kontak</div>
-              <div className="mt-1 text-slate-900">08xx-xxxx-xxxx</div>
+              <div className="mt-1 text-slate-900">0851-7433-1388</div>
               <div className="text-sm text-slate-600">
-                desa.leilem@example.go.id
+                www.desaleilem@yahoo.co.id
               </div>
             </div>
             <div>
               <div className="text-sm text-slate-500">Lokasi</div>
-              <div className="mt-1 text-slate-900">Desa Leilem, Minahasa</div>
+              <div className="mt-1 text-slate-900">
+                Kec. Sonder, Kab. Minahasa, Prov. Sulawesi Utara
+              </div>
               <Link href="/profil" className="uline text-sm">
                 Lihat peta & profil →
               </Link>
