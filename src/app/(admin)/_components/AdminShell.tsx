@@ -1,10 +1,10 @@
-// src/app/(admin)/_components/AdminShell.tsx
 "use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { LayoutGrid, Newspaper, LogOut, Menu, Store } from "lucide-react";
+import { supabaseBrowser } from "@/lib/supabaseBrowser";
 
 export default function AdminShell({
   children,
@@ -14,13 +14,29 @@ export default function AdminShell({
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
+  // ⬇️ Sinkronkan event auth -> cookie server
+  useEffect(() => {
+    const { data: sub } = supabaseBrowser.auth.onAuthStateChange(
+      async (event, session) => {
+        try {
+          await fetch("/api/auth/state", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ event, session }),
+            credentials: "include",
+          });
+        } catch {
+          // diamkan: hanya mekanisme sinkronisasi
+        }
+      }
+    );
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
   const nav = [
     { href: "/admin", label: "Dashboard", icon: LayoutGrid },
     { href: "/admin/berita", label: "Berita", icon: Newspaper },
     { href: "/admin/umkm", label: "UMKM", icon: Store },
-    // { href: "/admin/wisata", label: "Wisata", icon: MapPin },
-    // { href: "/admin/kesehatan", label: "Kesehatan", icon: Stethoscope },
-    // { href: "/admin/pengaturan", label: "Pengaturan", icon: Settings },
   ];
 
   const signOutHref = "/api/auth/signout?redirect=/admin/login";

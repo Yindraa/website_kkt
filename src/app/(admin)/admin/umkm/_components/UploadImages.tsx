@@ -32,11 +32,30 @@ export default function UploadImages({
     try {
       const supabase = supabaseBrowser;
 
-      // Pastikan user TERautentikasi (INSERT policy biasanya TO authenticated)
-      const { data: sess } = await supabase.auth.getSession();
-      if (!sess?.session) {
-        setErr("Sesi login berakhir. Silakan login ulang sebelum mengunggah.");
-        return;
+      // Pastikan ada session; kalau belum ada, coba refresh dulu
+      let {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) {
+        const { data: refreshed, error: re } =
+          await supabase.auth.refreshSession();
+        if (re || !refreshed.session) {
+          setErr(
+            "Sesi login berakhir. Silakan login ulang sebelum mengunggah."
+          );
+          return;
+        }
+        session = refreshed.session;
+
+        // (Penting di prod) sinkronkan cookie httpOnly di server
+        try {
+          await fetch("/api/auth/state", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ event: "TOKEN_REFRESHED", session }),
+            credentials: "include",
+          });
+        } catch {}
       }
 
       const uploaded: string[] = [];
@@ -47,7 +66,7 @@ export default function UploadImages({
           continue;
         }
 
-        // folder pertama WAJIB 'public' agar lolos policy:
+        // ⚠️ Policy INSERT kita biasanya mensyaratkan path diawali 'public/'
         // path: public/<YYYY>/<MM>/<timestamp>-<uuid>-<filename>
         const now = new Date();
         const y = now.getFullYear();
@@ -68,8 +87,15 @@ export default function UploadImages({
           });
 
         if (upErr) {
-          // contoh error RLS di hosting: "new row violates row-level security policy"
-          setErr(upErr.message);
+          // RLS/Unauthorized kebanyakan 401/403
+          const sc = (upErr as any)?.statusCode ?? (upErr as any)?.status;
+          if (sc === 401 || sc === 403) {
+            setErr(
+              "Akses ditolak (401/403). Pastikan sudah login & policy Storage mengizinkan INSERT untuk authenticated."
+            );
+          } else {
+            setErr(upErr.message);
+          }
           continue;
         }
 
@@ -85,7 +111,6 @@ export default function UploadImages({
       setErr((e as Error)?.message ?? "Gagal upload gambar");
     } finally {
       setUploading(false);
-      // reset input (pakai ref supaya tidak null)
       if (inputRef.current) inputRef.current.value = "";
     }
   }
