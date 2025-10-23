@@ -39,7 +39,9 @@ export default function GalleryStrip({ images }: { images: string[] }) {
 
   return (
     <section className="panel p-5">
-      <h2 className="text-lg font-semibold text-slate-900">Peta Desa</h2>
+      <h2 className="text-lg font-semibold text-slate-900">
+        Peta & Galeri Desa
+      </h2>
 
       {/* Thumbnails */}
       <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-3">

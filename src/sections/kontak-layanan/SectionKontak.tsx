@@ -15,6 +15,12 @@ const Schema = z.object({
 });
 type FormData = z.infer<typeof Schema>;
 
+// Data kontak resmi
+const TELP = "0851-7433-1388";
+const EMAIL = "desaleilem@yahoo.co.id";
+// WhatsApp deep link (format internasional, tanpa tanda +)
+const WA_LINK = "https://wa.me/6285174331388";
+
 export default function SectionKontak() {
   const [sent, setSent] = useState<"idle" | "ok" | "err">("idle");
   const {
@@ -49,59 +55,231 @@ export default function SectionKontak() {
         Silakan ajukan pertanyaan, saran, atau layanan administrasi.
       </p>
 
-      {/* 2 kolom: layanan & form */}
+      {/* 2 kolom: informasi layanan & form */}
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
-        {/* Layanan Admin (tanpa file) */}
-        <section className="panel p-6">
-          <h2 className="font-semibold text-slate-900">Layanan Administrasi</h2>
-          <p className="mt-2 text-slate-600">
-            Pilih layanan dan ajukan via formulir di samping.
-          </p>
+        {/* Informasi Layanan & Panduan */}
+        <section className="panel p-6 space-y-4">
+          <header>
+            <h2 className="font-semibold text-slate-900">
+              Layanan Administrasi
+            </h2>
+            <p className="mt-1 text-slate-600">
+              Prosedur umum: warga datang langsung dan mengajukan permohonan
+              kepada <strong>Sekretaris Desa</strong>. Siapkan setidaknya KTP
+              (dan KK bila diminta).
+            </p>
+          </header>
 
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          {/* Ringkasan daftar cepat */}
+          <div className="grid gap-3 sm:grid-cols-2">
             <ServiceCard
               title="Surat Keterangan Domisili"
-              desc="KTP/KK & formulir permohonan."
-              eta="Selesai 1–2 hari kerja"
+              desc="Syarat utama: KTP"
+              eta="Biasanya ± 5 menit"
             />
             <ServiceCard
-              title="Surat Keterangan Usaha (SKU)"
-              desc="KTP/KK, bukti usaha sederhana."
-              eta="Selesai 1–2 hari kerja"
+              title="Surat Keterangan Tidak Mampu (SKTM)"
+              desc="Syarat: KTP & KK, verifikasi lapangan"
+              eta="Cepat setelah verifikasi"
             />
             <ServiceCard
-              title="Surat Tidak Mampu (SKTM)"
-              desc="KTP/KK & surat pengantar RT/RW."
-              eta="Selesai 1–2 hari kerja"
+              title="Formulir KTP & KK"
+              desc="Permohonan administrasi kependudukan"
+              eta="1–2 hari kerja"
             />
             <ServiceCard
-              title="Legalitas Lainnya"
-              desc="Silakan jelaskan di formulir."
-              eta="Waktu menyesuaikan"
+              title="Layanan Lain"
+              desc="Surat usaha, belum menikah, keterangan penghasilan, dll."
+              eta="Menyesuaikan"
+            />
+            <ServiceCard
+              title="Surat Ukur Tanah"
+              desc="Layanan berbiaya/retribusi"
+              eta="Menyesuaikan"
+            />
+            <ServiceCard
+              title="Pindah Domisili, Kehilangan, Kelakuan Baik"
+              desc="KTP/KK & keperluan pendukung"
+              eta="1–2 hari kerja"
             />
           </div>
 
-          <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3">
+          {/* Kebijakan umum */}
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
             <div className="text-sm font-medium text-slate-900">
-              Jam Layanan Loket
+              Kebijakan Umum
             </div>
-            <div className="text-sm text-slate-700">
-              Senin–Jumat 08.00–15.00 (Istirahat 12.00–13.00)
-            </div>
-            <div className="text-sm text-slate-700">
-              Lokasi: Kantor Desa Leilem
-            </div>
+            <ul className="mt-1 list-disc pl-5 text-sm text-slate-700 space-y-1">
+              <li>
+                KTP & KK umumnya menjadi syarat utama untuk sebagian besar
+                layanan.
+              </li>
+              <li>
+                Semua layanan administrasi <strong>gratis</strong>, kecuali{" "}
+                <strong>Surat Ukur Tanah</strong> yang dikenakan
+                retribusi/biaya.
+              </li>
+              <li>
+                Kendala paling umum: warga lupa membawa KTP. Jika berkas kurang,
+                petugas desa akan membantu mengarahkan.
+              </li>
+            </ul>
           </div>
 
-          <div className="mt-3 text-sm text-slate-600">
-            Tanya cepat:{" "}
-            <Link
-              href="https://wa.me/62xxxxxxxxxx"
-              className="uline"
-              target="_blank"
-            >
-              WhatsApp Sekretariat
-            </Link>
+          {/* Panduan detail (tanpa JS berat, pakai <details>) */}
+          <section className="space-y-3">
+            <h3 className="font-semibold text-slate-900">Panduan Detail</h3>
+
+            {/* SK Domisili */}
+            <details className="rounded-xl border border-slate-200 bg-white p-4">
+              <summary className="cursor-pointer select-none text-slate-900 font-medium">
+                Surat Keterangan Domisili (SK Domisili)
+              </summary>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <div className="rounded-lg border p-3">
+                  <h4 className="font-medium text-slate-800">Syarat</h4>
+                  <ul className="mt-2 list-disc pl-5 text-sm text-slate-700 space-y-1">
+                    <li>KTP (dokumen utama).</li>
+                    <li>
+                      Tinggal/berdomisili di wilayah desa (meski belum resmi
+                      menjadi warga).
+                    </li>
+                  </ul>
+                  <p className="mt-3 text-sm">
+                    <span className="text-slate-500">Waktu proses:</span>{" "}
+                    <span className="font-medium text-slate-900">
+                      ± 5 menit
+                    </span>
+                  </p>
+                  <p className="text-sm">
+                    <span className="text-slate-500">Biaya:</span>{" "}
+                    <span className="font-medium text-slate-900">Gratis</span>
+                  </p>
+                </div>
+                <div className="rounded-lg border p-3">
+                  <h4 className="font-medium text-slate-800">Prosedur</h4>
+                  <ol className="mt-2 list-decimal pl-5 text-sm text-slate-700 space-y-1">
+                    <li>Datang langsung ke kantor desa.</li>
+                    <li>Sampaikan permohonan kepada Sekretaris Desa.</li>
+                    <li>Pengisian data & verifikasi singkat.</li>
+                    <li>Dokumen diterbitkan oleh perangkat desa.</li>
+                  </ol>
+                  <h5 className="mt-3 font-medium text-slate-800">
+                    Untuk Keperluan
+                  </h5>
+                  <ul className="mt-1 list-disc pl-5 text-sm text-slate-700">
+                    <li>Pengajuan pinjaman bank</li>
+                    <li>Administrasi lain yang memerlukan bukti domisili</li>
+                  </ul>
+                  <h5 className="mt-3 font-medium text-slate-800">Catatan</h5>
+                  <ul className="mt-1 list-disc pl-5 text-sm text-slate-700">
+                    <li>Pengurusan masih manual di kantor desa.</li>
+                    <li>
+                      Kendala dapat terjadi jika fasilitas kurang lengkap, namun
+                      petugas akan membantu.
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </details>
+
+            {/* SKTM */}
+            <details className="rounded-xl border border-slate-200 bg-white p-4">
+              <summary className="cursor-pointer select-none text-slate-900 font-medium">
+                Surat Keterangan Tidak Mampu (SKTM)
+              </summary>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <div className="rounded-lg border p-3">
+                  <h4 className="font-medium text-slate-800">Syarat</h4>
+                  <ul className="mt-2 list-disc pl-5 text-sm text-slate-700 space-y-1">
+                    <li>KTP</li>
+                    <li>Kartu Keluarga (KK)</li>
+                  </ul>
+                  <p className="mt-3 text-sm">
+                    <span className="text-slate-500">Waktu proses:</span>{" "}
+                    <span className="font-medium text-slate-900">
+                      Cepat, setelah verifikasi
+                    </span>
+                  </p>
+                  <p className="text-sm">
+                    <span className="text-slate-500">Biaya:</span>{" "}
+                    <span className="font-medium text-slate-900">Gratis</span>
+                  </p>
+                </div>
+                <div className="rounded-lg border p-3">
+                  <h4 className="font-medium text-slate-800">Prosedur</h4>
+                  <ol className="mt-2 list-decimal pl-5 text-sm text-slate-700 space-y-1">
+                    <li>
+                      Pendataan/penilaian lapangan oleh pihak desa (kunjungan
+                      rumah).
+                    </li>
+                    <li>
+                      Verifikasi kriteria (mis. tidak memiliki kendaraan, belum
+                      punya rumah sendiri).
+                    </li>
+                    <li>Datang ke kantor desa untuk penerbitan SK.</li>
+                  </ol>
+                  <h5 className="mt-3 font-medium text-slate-800">
+                    Untuk Keperluan
+                  </h5>
+                  <ul className="mt-1 list-disc pl-5 text-sm text-slate-700">
+                    <li>Pengajuan bantuan sosial</li>
+                    <li>Pendaftaran BPJS</li>
+                    <li>Kebutuhan pendidikan</li>
+                    <li>Program perumahan subsidi</li>
+                  </ul>
+                  <h5 className="mt-3 font-medium text-slate-800">Catatan</h5>
+                  <ul className="mt-1 list-disc pl-5 text-sm text-slate-700">
+                    <li>
+                      Tidak semua warga otomatis berhak; harus memenuhi
+                      kriteria.
+                    </li>
+                    <li>
+                      Proses dilakukan langsung oleh desa (tanpa RT/RW atau
+                      dinas sosial).
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </details>
+          </section>
+
+          {/* Kontak & Jam Layanan */}
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+            <div className="text-sm font-medium text-slate-900">
+              Kontak & Jam Layanan
+            </div>
+            <dl className="mt-1 grid gap-2 text-sm sm:grid-cols-2">
+              <div>
+                <dt className="text-slate-500">Telepon</dt>
+                <dd>
+                  <a href={`tel:${TELP}`} className="uline">
+                    {TELP}
+                  </a>
+                </dd>
+              </div>
+              <div>
+                <dt className="text-slate-500">Email</dt>
+                <dd>
+                  <a href={`mailto:${EMAIL}`} className="uline">
+                    {EMAIL}
+                  </a>
+                </dd>
+              </div>
+              <div className="sm:col-span-2">
+                <dt className="text-slate-500">Jam Layanan Loket</dt>
+                <dd>
+                  Senin–Jumat 08.00–15.00 (Istirahat 12.00–13.00) — Lokasi:
+                  Kantor Desa Leilem
+                </dd>
+              </div>
+            </dl>
+            <div className="mt-2 text-sm">
+              Tanya cepat via WhatsApp:{" "}
+              <Link href={WA_LINK} target="_blank" className="uline">
+                {TELP}
+              </Link>
+            </div>
           </div>
         </section>
 

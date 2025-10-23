@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { LayoutGrid, Newspaper, LogOut, Menu, Store } from "lucide-react";
+import { LayoutGrid, Newspaper, LogOut, Menu, Store, Mail } from "lucide-react";
 import { supabaseBrowser } from "@/lib/supabaseBrowser";
 
 export default function AdminShell({
@@ -14,7 +14,7 @@ export default function AdminShell({
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
-  // ⬇️ Sinkronkan event auth -> cookie server
+  // Sinkronkan event auth -> cookie server
   useEffect(() => {
     const { data: sub } = supabaseBrowser.auth.onAuthStateChange(
       async (event, session) => {
@@ -26,7 +26,7 @@ export default function AdminShell({
             credentials: "include",
           });
         } catch {
-          // diamkan: hanya mekanisme sinkronisasi
+          // diamkan: mekanisme sinkronisasi
         }
       }
     );
@@ -37,6 +37,7 @@ export default function AdminShell({
     { href: "/admin", label: "Dashboard", icon: LayoutGrid },
     { href: "/admin/berita", label: "Berita", icon: Newspaper },
     { href: "/admin/umkm", label: "UMKM", icon: Store },
+    { href: "/admin/kontak", label: "Kontak", icon: Mail }, // << item baru
   ];
 
   const signOutHref = "/api/auth/signout?redirect=/admin/login";
@@ -88,6 +89,7 @@ export default function AdminShell({
                 <Link
                   key={item.href}
                   href={item.href}
+                  aria-current={active ? "page" : undefined}
                   className={[
                     "flex items-center gap-2 rounded-lg px-3 py-2 text-sm",
                     active
