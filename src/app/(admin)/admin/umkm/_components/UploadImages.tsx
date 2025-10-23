@@ -11,6 +11,18 @@ type Props = {
   bucket: "umkm" | "berita"; // bucket supabase storage
 };
 
+// Helper untuk mengekstrak HTTP status dari objek error tanpa `any`
+function httpStatusFromError(err: unknown): number | undefined {
+  if (typeof err === "object" && err !== null) {
+    const rec = err as Record<string, unknown>;
+    const v1 = rec["statusCode"];
+    if (typeof v1 === "number") return v1;
+    const v2 = rec["status"];
+    if (typeof v2 === "number") return v2;
+  }
+  return undefined;
+}
+
 export default function UploadImages({
   name,
   defaultUrls = [],
@@ -47,7 +59,7 @@ export default function UploadImages({
         }
         session = refreshed.session;
 
-        // (Penting di prod) sinkronkan cookie httpOnly di server
+        // Sinkronkan cookie httpOnly di server
         try {
           await fetch("/api/auth/state", {
             method: "POST",
@@ -55,7 +67,9 @@ export default function UploadImages({
             body: JSON.stringify({ event: "TOKEN_REFRESHED", session }),
             credentials: "include",
           });
-        } catch {}
+        } catch {
+          // ignore
+        }
       }
 
       const uploaded: string[] = [];
@@ -66,7 +80,6 @@ export default function UploadImages({
           continue;
         }
 
-        // ⚠️ Policy INSERT kita biasanya mensyaratkan path diawali 'public/'
         // path: public/<YYYY>/<MM>/<timestamp>-<uuid>-<filename>
         const now = new Date();
         const y = now.getFullYear();
@@ -87,9 +100,8 @@ export default function UploadImages({
           });
 
         if (upErr) {
-          // RLS/Unauthorized kebanyakan 401/403
-          const sc = (upErr as any)?.statusCode ?? (upErr as any)?.status;
-          if (sc === 401 || sc === 403) {
+          const code = httpStatusFromError(upErr);
+          if (code === 401 || code === 403) {
             setErr(
               "Akses ditolak (401/403). Pastikan sudah login & policy Storage mengizinkan INSERT untuk authenticated."
             );
@@ -99,7 +111,6 @@ export default function UploadImages({
           continue;
         }
 
-        // Ambil public URL (bucket diset public READ)
         const { data } = supabase.storage.from(bucket).getPublicUrl(path);
         if (data?.publicUrl) uploaded.push(data.publicUrl);
       }
