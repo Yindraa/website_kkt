@@ -15,14 +15,38 @@ async function createAction(
     const kontak = String(formData.get("kontak") ?? "").trim() || null;
     const gmapsLink = String(formData.get("gmapsLink") ?? "").trim() || null;
     const kategoriId = Number(formData.get("kategoriId"));
-    const gambar = formData.getAll("gambar").map(String).filter(Boolean); // array URL
+    const gambar = formData.getAll("gambar").map(String).filter(Boolean);
+    const pemilik = String(formData.get("pemilik") ?? "").trim() || null;
+    const websiteUrl = String(formData.get("websiteUrl") ?? "").trim() || null;
+    const instagramUrl =
+      String(formData.get("instagramUrl") ?? "").trim() || null;
+    const facebookUrl =
+      String(formData.get("facebookUrl") ?? "").trim() || null;
+    const tiktokUrl = String(formData.get("tiktokUrl") ?? "").trim() || null;
+    const xUrl = String(formData.get("xUrl") ?? "").trim() || null;
+    const youtubeUrl = String(formData.get("youtubeUrl") ?? "").trim() || null;
 
     if (!nama || !Number.isFinite(kategoriId)) {
       return { ok: false, error: "Nama dan kategori wajib diisi." };
     }
 
     await prisma.umkm.create({
-      data: { nama, deskripsi, alamat, kontak, gmapsLink, kategoriId, gambar },
+      data: {
+        nama,
+        deskripsi,
+        alamat,
+        kontak,
+        gmapsLink,
+        kategoriId,
+        gambar,
+        pemilik,
+        websiteUrl,
+        instagramUrl,
+        facebookUrl,
+        tiktokUrl,
+        xUrl,
+        youtubeUrl,
+      },
       select: { id: true },
     });
 

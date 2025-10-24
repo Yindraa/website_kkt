@@ -17,6 +17,14 @@ type Initial = {
   gmapsLink?: string | null;
   kategoriId?: number;
   gambar?: string[];
+  // sosial (kita isi username saja)
+  pemilik?: string | null;
+  websiteUrl?: string | null; // boleh domain/URL penuh atau kosong
+  instagramUrl?: string | null; // username saja, contoh: desaleilem
+  facebookUrl?: string | null; // username/halaman: desa.leilem
+  tiktokUrl?: string | null; // username: desaleilem
+  xUrl?: string | null; // username: desaleilem
+  youtubeUrl?: string | null; // channel handle tanpa '@' atau custom id
 };
 
 export default function UmkmForm({
@@ -32,7 +40,6 @@ export default function UmkmForm({
 }) {
   const router = useRouter();
 
-  // Bungkus server action di reducer untuk handle redirect di client
   const [state, formAction] = useActionState<FormState, FormData>(
     async (prev, fd) => {
       const res = await action(prev, fd);
@@ -45,9 +52,11 @@ export default function UmkmForm({
     },
     { ok: true }
   );
+
   function getErrorMessage(s: FormState): string | null {
     return s.ok ? null : s.error;
   }
+
   return (
     <form action={formAction} className="mt-6 space-y-4">
       {initial?.id ? (
@@ -85,12 +94,12 @@ export default function UmkmForm({
         </div>
 
         <div>
-          <label className="block text-sm text-slate-600">Kontak</label>
+          <label className="block text-sm text-slate-600">Kontak umum</label>
           <input
             name="kontak"
             defaultValue={initial?.kontak ?? ""}
             className="w-full rounded-lg border border-slate-300 px-3 py-2"
-            placeholder="Nomor WA / IG / Website"
+            placeholder="Nomor WA / telepon (opsional)"
           />
         </div>
       </div>
@@ -105,21 +114,91 @@ export default function UmkmForm({
           />
         </div>
         <div>
-          <label className="block text-sm text-slate-600">
-            Google Maps Link
-          </label>
+          <label className="block text-sm text-slate-600">Google Maps</label>
           <input
             name="gmapsLink"
             defaultValue={initial?.gmapsLink ?? ""}
             className="w-full rounded-lg border border-slate-300 px-3 py-2"
-            placeholder="URL embed atau link Maps (boleh biasa)"
+            placeholder="Tempel URL / koordinat lat,lng / alamat"
           />
           <p className="text-xs text-slate-500 mt-1">
-            Tips: dari Google Maps pilih “Bagikan” → “Sematkan peta”, copy URL
-            yang mengandung <code>/maps/embed</code>. Jika kamu tempel link
-            biasa, kami akan coba sematkan otomatis; jika gagal, tombol “Buka di
-            Google Maps” akan muncul.
+            Paling akurat: pakai “Bagikan → Sematkan peta” (URL berisi
+            <code> /maps/embed</code>) atau masukkan koordinat{" "}
+            <code>lat,lng</code>.
           </p>
+        </div>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div>
+          <label className="block text-sm text-slate-600">Nama Pemilik</label>
+          <input
+            name="pemilik"
+            defaultValue={initial?.pemilik ?? ""}
+            className="w-full rounded-lg border border-slate-300 px-3 py-2"
+            placeholder="Nama lengkap (opsional)"
+          />
+        </div>
+        <div>
+          <label className="block text-sm text-slate-600">Website</label>
+          <input
+            name="websiteUrl"
+            defaultValue={initial?.websiteUrl ?? ""}
+            className="w-full rounded-lg border border-slate-300 px-3 py-2"
+            placeholder="contoh: desaleilem.id (opsional)"
+          />
+        </div>
+      </div>
+
+      {/* Username medsos */}
+      <div className="grid gap-3 sm:grid-cols-3">
+        <div>
+          <label className="block text-sm text-slate-600">Instagram</label>
+          <input
+            name="instagramUrl"
+            defaultValue={initial?.instagramUrl ?? ""}
+            className="w-full rounded-lg border border-slate-300 px-3 py-2"
+            placeholder="username saja, mis. desaleilem"
+          />
+        </div>
+        <div>
+          <label className="block text-sm text-slate-600">Facebook</label>
+          <input
+            name="facebookUrl"
+            defaultValue={initial?.facebookUrl ?? ""}
+            className="w-full rounded-lg border border-slate-300 px-3 py-2"
+            placeholder="halaman/username, mis. desa.leilem"
+          />
+        </div>
+        <div>
+          <label className="block text-sm text-slate-600">TikTok</label>
+          <input
+            name="tiktokUrl"
+            defaultValue={initial?.tiktokUrl ?? ""}
+            className="w-full rounded-lg border border-slate-300 px-3 py-2"
+            placeholder="username, mis. desaleilem"
+          />
+        </div>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div>
+          <label className="block text-sm text-slate-600">X (Twitter)</label>
+          <input
+            name="xUrl"
+            defaultValue={initial?.xUrl ?? ""}
+            className="w-full rounded-lg border border-slate-300 px-3 py-2"
+            placeholder="username (tanpa @), mis. desaleilem"
+          />
+        </div>
+        <div>
+          <label className="block text-sm text-slate-600">YouTube</label>
+          <input
+            name="youtubeUrl"
+            defaultValue={initial?.youtubeUrl ?? ""}
+            className="w-full rounded-lg border border-slate-300 px-3 py-2"
+            placeholder="handle tanpa @ / custom id"
+          />
         </div>
       </div>
 

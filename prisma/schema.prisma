@@ -71,6 +71,13 @@ model Umkm {
   gmapsLink     String?                  // Link Google Maps yang interaktif
   kategori      KategoriUmkm @relation(fields: [kategoriId], references: [id])
   kategoriId    Int
+  pemilik      String?
+  websiteUrl   String?
+  instagramUrl String?
+  facebookUrl  String?
+  tiktokUrl    String?
+  xUrl         String?
+  youtubeUrl   String?
 }
 
 model Potensi {

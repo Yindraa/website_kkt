@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import AdminHeader from "@/app/(admin)/_components/AdminHeader"; // path absolut aman
+import AdminHeader from "@/app/(admin)/_components/AdminHeader";
 
 async function deleteAction(formData: FormData) {
   "use server";
@@ -14,7 +14,13 @@ async function deleteAction(formData: FormData) {
 export default async function AdminUmkmListPage() {
   const rows = await prisma.umkm.findMany({
     orderBy: { id: "desc" },
-    select: { id: true, nama: true, alamat: true, kontak: true },
+    select: {
+      id: true,
+      nama: true,
+      alamat: true,
+      kontak: true,
+      pemilik: true, // baru
+    },
   });
 
   return (
@@ -38,6 +44,7 @@ export default async function AdminUmkmListPage() {
           <thead className="bg-slate-50 text-slate-600">
             <tr>
               <th className="px-4 py-3 text-left">Nama</th>
+              <th className="px-4 py-3 text-left">Pemilik</th>
               <th className="px-4 py-3 text-left">Alamat</th>
               <th className="px-4 py-3 text-left">Kontak</th>
               <th className="px-4 py-3 text-right">Aksi</th>
@@ -47,6 +54,7 @@ export default async function AdminUmkmListPage() {
             {rows.map((r) => (
               <tr key={r.id} className="border-t border-slate-100">
                 <td className="px-4 py-3">{r.nama}</td>
+                <td className="px-4 py-3">{r.pemilik ?? "-"}</td>
                 <td className="px-4 py-3">{r.alamat ?? "-"}</td>
                 <td className="px-4 py-3">{r.kontak ?? "-"}</td>
                 <td className="px-4 py-3">
@@ -71,7 +79,7 @@ export default async function AdminUmkmListPage() {
               <tr>
                 <td
                   className="px-4 py-6 text-center text-slate-500"
-                  colSpan={4}
+                  colSpan={5}
                 >
                   Belum ada UMKM.
                 </td>
