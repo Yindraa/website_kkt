@@ -1,8 +1,49 @@
 // src/app/(public)/berita/[slug]/page.tsx
-import { prisma } from "@/lib/prisma";
+import Image from "next/image";
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import { prisma } from "@/lib/prisma";
+import SourceAttribution from "@/sections/berita/components/SourceAttribution";
 
-export const revalidate = 60; // ISR
+// Untuk SEO dinamis
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const b = await prisma.berita.findUnique({
+    where: { slug },
+    select: {
+      judul: true,
+      gambarUtama: true,
+      sumberEksternal: true,
+      tanggalPublish: true,
+      isDraft: true,
+    },
+  });
+  if (!b || b.isDraft) return {};
+
+  const title = b.judul;
+  const description = "Ringkasan berita dari sumber tepercaya.";
+  const ogImage = b.gambarUtama || "/og-default.png";
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "article",
+      images: [ogImage],
+    },
+    alternates: {
+      canonical: `/berita/${slug}`,
+    },
+  };
+}
+
+export const dynamic = "force-dynamic";
 
 export default async function BeritaDetailPage({
   params,
@@ -11,52 +52,86 @@ export default async function BeritaDetailPage({
 }) {
   const { slug } = await params;
 
-  const data = await prisma.berita.findUnique({
+  const b = await prisma.berita.findUnique({
     where: { slug },
+    select: {
+      id: true,
+      judul: true,
+      slug: true,
+      konten: true, // hanya ringkasan yang kamu tulis
+      gambarUtama: true,
+      sumberEksternal: true,
+      tanggalPublish: true,
+      isDraft: true,
+    },
   });
 
-  if (!data || data.isDraft) notFound();
+  if (!b || b.isDraft) notFound();
+
+  // JSON-LD Article (SEO)
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: b.judul,
+    datePublished: new Date(b.tanggalPublish).toISOString(),
+    dateModified: new Date(b.tanggalPublish).toISOString(),
+    image: b.gambarUtama ? [b.gambarUtama] : undefined,
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": `https://yourdomain.com/berita/${b.slug}`,
+    },
+    isBasedOn: b.sumberEksternal || undefined,
+  };
 
   return (
-    <article className="mx-auto max-w-3xl px-4 py-8 prose prose-slate">
-      <h1>{data.judul}</h1>
-      <p className="text-sm text-slate-500">
-        {new Date(data.tanggalPublish).toLocaleString("id-ID")}
-      </p>
+    <article className="mx-auto max-w-3xl px-4 py-8">
+      {/* JSON-LD */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
 
-      {data.gambarUtama ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={data.gambarUtama}
-          alt={data.judul}
-          className="w-full rounded-lg"
-        />
+      <header className="mb-4">
+        <div className="text-xs text-slate-500">
+          {new Date(b.tanggalPublish).toLocaleString("id-ID")}
+        </div>
+        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
+          {b.judul}
+        </h1>
+      </header>
+
+      {b.gambarUtama ? (
+        <div className="relative aspect-[16/9] rounded-xl overflow-hidden border">
+          <Image
+            src={b.gambarUtama}
+            alt={b.judul}
+            fill
+            className="object-cover"
+            unoptimized
+          />
+        </div>
       ) : null}
 
-      {data.sumberEksternal && !data.konten?.trim() ? (
-        <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4">
-          <p>Berita ini berasal dari sumber eksternal.</p>
-          <p className="mt-2">
-            <a
-              className="btn btn-primary"
-              href={data.sumberEksternal}
-              target="_blank"
-            >
-              Baca lengkap di sumber
-            </a>
-          </p>
+      {/* Konten ringkasan */}
+      {b.konten ? (
+        <div className="prose prose-slate max-w-none mt-4">
+          <p className="whitespace-pre-wrap">{b.konten}</p>
         </div>
       ) : (
-        <div className="mt-4 whitespace-pre-wrap">{data.konten}</div>
+        <p className="mt-4 text-slate-600">
+          Ringkasan belum tersedia. Silakan baca versi lengkap di sumber.
+        </p>
       )}
 
-      {data.sumberEksternal && data.konten?.trim() ? (
-        <p className="mt-4">
-          <a className="uline" href={data.sumberEksternal} target="_blank">
-            Sumber eksternal
-          </a>
-        </p>
-      ) : null}
+      {/* Atribusi sumber */}
+      <SourceAttribution sumber={b.sumberEksternal} className="mt-6" />
+
+      {/* Tombol kembali */}
+      <div className="mt-6">
+        <Link href="/berita" className="btn btn-ghost">
+          ← Kembali ke daftar berita
+        </Link>
+      </div>
     </article>
   );
 }

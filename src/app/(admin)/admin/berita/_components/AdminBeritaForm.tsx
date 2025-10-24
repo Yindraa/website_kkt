@@ -91,7 +91,9 @@ export default function AdminBeritaForm({
     fd.delete("gambarFile");
 
     // Penting: JANGAN await (formAction tidak mengembalikan nilai)
-    formAction(fd);
+    startTransition(() => {
+      formAction(fd);
+    });
   }
 
   function getErrorMessage(s: FormState): string | null {

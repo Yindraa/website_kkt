@@ -2,43 +2,34 @@
 import Link from "next/link";
 import Image from "next/image";
 import { prisma } from "@/lib/prisma";
-import { Prisma } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
 
-type SP = { q?: string; page?: string };
+type SP = { page?: string };
+
+function getDomain(url?: string | null): string | null {
+  try {
+    if (!url) return null;
+    const u = new URL(url);
+    return u.hostname.replace(/^www\./, "");
+  } catch {
+    return null;
+  }
+}
 
 export default async function BeritaListPage({
   searchParams,
 }: {
   searchParams: Promise<SP>;
 }) {
-  const sp = await searchParams;
-
-  const q = (sp.q ?? "").trim();
-  const pageRaw = parseInt(sp.page ?? "1", 10);
-  const page = Number.isFinite(pageRaw) && pageRaw > 0 ? pageRaw : 1;
-
-  const take = 8;
-  const skip = (page - 1) * take;
-
-  const where: Prisma.BeritaWhereInput = q
-    ? {
-        AND: [
-          { isDraft: false },
-          {
-            OR: [
-              { judul: { contains: q, mode: "insensitive" } },
-              { konten: { contains: q, mode: "insensitive" } },
-            ],
-          },
-        ],
-      }
-    : { isDraft: false };
+  const { page = "1" } = await searchParams;
+  const pageNum = Math.max(1, Number(page) || 1);
+  const take = 9;
+  const skip = (pageNum - 1) * take;
 
   const [rows, total] = await Promise.all([
     prisma.berita.findMany({
-      where,
+      where: { isDraft: false },
       orderBy: { tanggalPublish: "desc" },
       skip,
       take,
@@ -49,143 +40,111 @@ export default async function BeritaListPage({
         gambarUtama: true,
         tanggalPublish: true,
         sumberEksternal: true,
+        // gunakan kolom konten sbg ringkasan singkat (max 300-400 karakter)
+        konten: true,
       },
     }),
-    prisma.berita.count({ where }),
+    prisma.berita.count({ where: { isDraft: false } }),
   ]);
 
-  const totalPages = Math.max(Math.ceil(total / take), 1);
+  const hasPrev = pageNum > 1;
+  const hasNext = skip + rows.length < total;
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
-      <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
-        Berita Desa
-      </h1>
+      <header className="mb-4">
+        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
+          Berita Desa
+        </h1>
+        <p className="text-slate-600">
+          Kumpulan ringkasan berita dari sumber tepercaya.
+        </p>
+      </header>
 
-      <form className="mt-4 flex gap-2">
-        <input
-          name="q"
-          defaultValue={q}
-          placeholder="Cari berita…"
-          className="w-full rounded-lg border border-slate-200 px-3 py-2"
-        />
-        <button className="btn btn-primary">Cari</button>
-      </form>
+      {rows.length === 0 ? (
+        <p className="text-slate-500">Belum ada berita.</p>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {rows.map((b) => {
+            const domain = getDomain(b.sumberEksternal);
+            const preview =
+              (b.konten || "").replace(/\s+/g, " ").trim().slice(0, 220) +
+              (b.konten && b.konten.length > 220 ? "…" : "");
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {rows.map((b) => (
-          <article key={b.id} className="panel p-4 flex flex-col">
-            {b.gambarUtama ? (
-              <Image
-                src={b.gambarUtama}
-                alt={b.judul}
-                width={800}
-                height={450}
-                className="w-full h-40 object-cover rounded-md"
-                unoptimized
-              />
-            ) : null}
+            return (
+              <article key={b.id} className="panel overflow-hidden">
+                {b.gambarUtama ? (
+                  <div className="relative aspect-[16/9]">
+                    <Image
+                      src={b.gambarUtama}
+                      alt={b.judul}
+                      fill
+                      className="object-cover"
+                      unoptimized
+                    />
+                  </div>
+                ) : null}
 
-            <h2 className="mt-3 font-semibold text-slate-900">
-              <Link href={`/berita/${b.slug}`}>{b.judul}</Link>
-            </h2>
+                <div className="p-4">
+                  <div className="text-xs text-slate-500">
+                    {new Date(b.tanggalPublish).toLocaleDateString("id-ID")}
+                    {domain ? ` • ${domain}` : ""}
+                  </div>
 
-            <div className="text-sm text-slate-500">
-              {new Date(b.tanggalPublish).toLocaleDateString("id-ID")}
-            </div>
+                  <h2 className="mt-1 font-semibold text-slate-900 line-clamp-2">
+                    <Link href={`/berita/${b.slug}`}>{b.judul}</Link>
+                  </h2>
 
-            {b.sumberEksternal ? (
-              <a
-                className="uline mt-2 inline-block"
-                href={b.sumberEksternal}
-                target="_blank"
-              >
-                Baca di sumber →
-              </a>
-            ) : (
-              <Link
-                className="uline mt-2 inline-block"
-                href={`/berita/${b.slug}`}
-              >
-                Baca selengkapnya →
-              </Link>
-            )}
-          </article>
-        ))}
+                  {preview ? (
+                    <p className="mt-2 text-sm text-slate-700 line-clamp-3">
+                      {preview}
+                    </p>
+                  ) : null}
+
+                  <div className="mt-3 flex items-center gap-2">
+                    <Link href={`/berita/${b.slug}`} className="btn btn-ghost">
+                      Baca ringkas →
+                    </Link>
+                    {b.sumberEksternal ? (
+                      <Link
+                        href={b.sumberEksternal}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn btn-ghost"
+                      >
+                        Sumber
+                      </Link>
+                    ) : null}
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Pagination */}
+      <div className="mt-6 flex items-center justify-center gap-2">
+        {hasPrev ? (
+          <Link href={`/berita?page=${pageNum - 1}`} className="btn btn-ghost">
+            ← Sebelumnya
+          </Link>
+        ) : (
+          <span className="btn btn-ghost pointer-events-none opacity-50">
+            ← Sebelumnya
+          </span>
+        )}
+        <span className="text-sm text-slate-600">Halaman {pageNum}</span>
+        {hasNext ? (
+          <Link href={`/berita?page=${pageNum + 1}`} className="btn btn-ghost">
+            Selanjutnya →
+          </Link>
+        ) : (
+          <span className="btn btn-ghost pointer-events-none opacity-50">
+            Selanjutnya →
+          </span>
+        )}
       </div>
-
-      <Pagination q={q} page={page} totalPages={totalPages} />
     </div>
-  );
-}
-
-function Pagination({
-  q,
-  page,
-  totalPages,
-}: {
-  q: string;
-  page: number;
-  totalPages: number;
-}) {
-  const prev = Math.max(page - 1, 1);
-  const next = Math.min(page + 1, totalPages);
-
-  const qParam = (p: number) => {
-    const usp = new URLSearchParams();
-    if (q) usp.set("q", q);
-    usp.set("page", String(p));
-    return `/berita?${usp.toString()}`;
-  };
-
-  const baseBtn =
-    "inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white " +
-    "px-3 py-1.5 text-xs sm:text-sm sm:px-4 sm:py-2 hover:bg-slate-50 transition-colors";
-
-  const disabledBtn =
-    "inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white " +
-    "px-3 py-1.5 text-xs sm:text-sm sm:px-4 sm:py-2 opacity-50 pointer-events-none";
-
-  return (
-    <nav className="mt-6 flex items-center justify-center gap-2">
-      {/* Prev */}
-      {page > 1 ? (
-        <a
-          href={qParam(prev)}
-          className={baseBtn}
-          aria-label="Halaman sebelumnya"
-        >
-          <span className="sm:hidden">‹</span>
-          <span className="hidden sm:inline">« Sebelumnya</span>
-        </a>
-      ) : (
-        <span className={disabledBtn} aria-hidden="true">
-          <span className="sm:hidden">‹</span>
-          <span className="hidden sm:inline">« Sebelumnya</span>
-        </span>
-      )}
-
-      {/* Indicator */}
-      <span className="mx-1 select-none text-[11px] sm:text-sm text-slate-600">
-        {page} / {totalPages}
-      </span>
-
-      {/* Next */}
-      {page < totalPages ? (
-        <a
-          href={qParam(next)}
-          className={baseBtn}
-          aria-label="Halaman berikutnya"
-        >
-          <span className="sm:hidden">›</span>
-          <span className="hidden sm:inline">Berikutnya »</span>
-        </a>
-      ) : (
-        <span className={disabledBtn} aria-hidden="true">
-          <span className="sm:hidden">›</span>
-          <span className="hidden sm:inline">Berikutnya »</span>
-        </span>
-      )}
-    </nav>
   );
 }
