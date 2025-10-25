@@ -1,6 +1,7 @@
+// src/app/(admin)/admin/umkm/_components/UmkmForm.tsx
 "use client";
 
-import { useActionState, startTransition } from "react";
+import { useActionState, startTransition, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import UploadImages from "./UploadImages";
 
@@ -19,12 +20,12 @@ type Initial = {
   gambar?: string[];
   // sosial (kita isi username saja)
   pemilik?: string | null;
-  websiteUrl?: string | null; // boleh domain/URL penuh atau kosong
-  instagramUrl?: string | null; // username saja, contoh: desaleilem
-  facebookUrl?: string | null; // username/halaman: desa.leilem
-  tiktokUrl?: string | null; // username: desaleilem
-  xUrl?: string | null; // username: desaleilem
-  youtubeUrl?: string | null; // channel handle tanpa '@' atau custom id
+  websiteUrl?: string | null;
+  instagramUrl?: string | null;
+  facebookUrl?: string | null;
+  tiktokUrl?: string | null;
+  xUrl?: string | null;
+  youtubeUrl?: string | null;
 };
 
 export default function UmkmForm({
@@ -53,12 +54,23 @@ export default function UmkmForm({
     { ok: true }
   );
 
+  // <-- pending submit state untuk tombol
+  const [isPending, startSubmit] = useTransition();
+
   function getErrorMessage(s: FormState): string | null {
     return s.ok ? null : s.error;
   }
 
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    startSubmit(() => {
+      formAction(fd);
+    });
+  }
+
   return (
-    <form action={formAction} className="mt-6 space-y-4">
+    <form onSubmit={onSubmit} className="mt-6 space-y-4">
       {initial?.id ? (
         <input type="hidden" name="id" defaultValue={String(initial.id)} />
       ) : null}
@@ -225,7 +237,9 @@ export default function UmkmForm({
       )}
 
       <div className="pt-2 flex items-center gap-2">
-        <button className="btn btn-primary">{submitLabel}</button>
+        <button className="btn btn-primary" disabled={isPending}>
+          {isPending ? "Menyimpan…" : submitLabel}
+        </button>
       </div>
     </form>
   );

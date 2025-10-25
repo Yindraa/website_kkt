@@ -1,6 +1,13 @@
+// src/app/(admin)/admin/berita/_components/AdminBeritaForm.tsx
 "use client";
 
-import { useActionState, useState, FormEvent, startTransition } from "react";
+import {
+  useActionState,
+  useState,
+  FormEvent,
+  startTransition,
+  useTransition,
+} from "react";
 import { useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabaseBrowser";
 
@@ -28,23 +35,24 @@ export default function AdminBeritaForm({
 }) {
   const router = useRouter();
 
-  // Bungkus server action di dalam reducer untuk useActionState
   const [state, formAction] = useActionState<FormState, FormData>(
     async (prev, fd) => {
       const res = await action(prev, fd);
       if (res.ok && res.redirectTo) {
         startTransition(() => router.push(res.redirectTo!));
       }
-      return res; // penting: kembalikan FormState agar state terbarui
+      return res;
     },
     { ok: true }
   );
 
-  // Local UI state
   const [isUploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(
     initial?.gambarUtama ?? null
   );
+
+  // <-- pending submit state untuk tombol simpan
+  const [isPending, startSubmit] = useTransition();
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -90,8 +98,8 @@ export default function AdminBeritaForm({
     // Jangan kirim field file ke server action
     fd.delete("gambarFile");
 
-    // Penting: JANGAN await (formAction tidak mengembalikan nilai)
-    startTransition(() => {
+    // Jalankan Server Action di dalam transition agar dapat isPending
+    startSubmit(() => {
       formAction(fd);
     });
   }
@@ -196,8 +204,8 @@ export default function AdminBeritaForm({
       )}
 
       <div className="pt-2 flex items-center gap-2">
-        <button className="btn btn-primary" disabled={isUploading}>
-          {isUploading ? "Mengunggah…" : submitLabel}
+        <button className="btn btn-primary" disabled={isUploading || isPending}>
+          {isUploading ? "Mengunggah…" : isPending ? "Menyimpan…" : submitLabel}
         </button>
       </div>
     </form>
