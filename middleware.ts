@@ -2,15 +2,13 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 
 export async function middleware(req: NextRequest) {
-  // Response pass-through yang bisa ditulisi cookie (hasil refresh/rotasi)
-  const res = NextResponse.next({
-    request: { headers: req.headers },
-  });
+  const res = NextResponse.next({ request: { headers: req.headers } });
 
   try {
-    // Lewati semua rute API (termasuk /api/auth/state) — kita sudah sinkronisasi via endpoint itu
-    const pathname = req.nextUrl.pathname;
-    if (pathname.startsWith("/api/")) {
+    const { pathname } = req.nextUrl;
+
+    // Lewati rute API & halaman login (biar nggak ada loop aneh)
+    if (pathname.startsWith("/api/") || pathname === "/admin/login") {
       return res;
     }
 
@@ -32,16 +30,15 @@ export async function middleware(req: NextRequest) {
       }
     );
 
-    // Memicu refresh/rotasi token jika perlu sehingga cookie httpOnly tetap sinkron
+    // Memicu refresh/rotasi token jika perlu
     await supabase.auth.getSession();
   } catch {
-    // Jangan blokir request jika ada error kecil; biarkan lanjut
+    // noop
   }
 
   return res;
 }
 
-// Skip asset statis biar ringan
 export const config = {
   matcher: [
     "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)",

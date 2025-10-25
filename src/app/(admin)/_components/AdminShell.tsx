@@ -14,7 +14,7 @@ export default function AdminShell({
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
-  // Sinkronkan event auth -> cookie server
+  // 1) Sinkronkan event auth -> cookie server (berjalan saat SIGNED_IN / TOKEN_REFRESHED / SIGNED_OUT)
   useEffect(() => {
     const { data: sub } = supabaseBrowser.auth.onAuthStateChange(
       async (event, session) => {
@@ -26,18 +26,40 @@ export default function AdminShell({
             credentials: "include",
           });
         } catch {
-          // diamkan: mekanisme sinkronisasi
+          // noop
         }
       }
     );
     return () => sub.subscription.unsubscribe();
   }, []);
 
+  // 2) Penting: kirim INITIAL_SESSION sekali saat mount
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabaseBrowser.auth.getSession();
+      if (data.session) {
+        try {
+          await fetch("/api/auth/state", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              event: "INITIAL_SESSION",
+              session: data.session,
+            }),
+            credentials: "include",
+          });
+        } catch {
+          // noop
+        }
+      }
+    })();
+  }, []);
+
   const nav = [
     { href: "/admin", label: "Dashboard", icon: LayoutGrid },
     { href: "/admin/berita", label: "Berita", icon: Newspaper },
     { href: "/admin/umkm", label: "UMKM", icon: Store },
-    { href: "/admin/kontak", label: "Kontak", icon: Mail }, // << item baru
+    { href: "/admin/kontak", label: "Kontak", icon: Mail },
   ];
 
   const signOutHref = "/api/auth/signout?redirect=/admin/login";
@@ -59,7 +81,7 @@ export default function AdminShell({
             Admin Desa Leilem
           </Link>
 
-          {/* Sign out (desktop) -> GET + redirect */}
+          {/* Sign out (desktop) */}
           <Link
             href={signOutHref}
             className="hidden lg:inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm hover:bg-slate-50"
@@ -105,7 +127,7 @@ export default function AdminShell({
             })}
           </nav>
 
-          {/* Keluar (mobile) -> GET + redirect */}
+          {/* Keluar (mobile) */}
           <Link
             href={signOutHref}
             className="lg:hidden mt-3 w-full inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm hover:bg-slate-50"
