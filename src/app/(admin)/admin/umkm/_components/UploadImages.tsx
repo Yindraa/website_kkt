@@ -1,3 +1,4 @@
+// src/app/(admin)/admin/umkm/_components/UploadImages.tsx
 "use client";
 
 import { useRef, useState } from "react";
@@ -11,14 +12,13 @@ type Props = {
   bucket: "umkm" | "berita"; // bucket supabase storage
 };
 
-// Helper untuk mengekstrak HTTP status dari objek error tanpa `any`
+// Helper baca kemungkinan status HTTP dari error tanpa "any"
 function httpStatusFromError(err: unknown): number | undefined {
   if (typeof err === "object" && err !== null) {
     const rec = err as Record<string, unknown>;
-    const v1 = rec["statusCode"];
-    if (typeof v1 === "number") return v1;
-    const v2 = rec["status"];
-    if (typeof v2 === "number") return v2;
+    if (typeof rec["statusCode"] === "number")
+      return rec["statusCode"] as number;
+    if (typeof rec["status"] === "number") return rec["status"] as number;
   }
   return undefined;
 }
@@ -43,35 +43,6 @@ export default function UploadImages({
 
     try {
       const supabase = supabaseBrowser;
-
-      // Pastikan ada session; kalau belum ada, coba refresh dulu
-      let {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session) {
-        const { data: refreshed, error: re } =
-          await supabase.auth.refreshSession();
-        if (re || !refreshed.session) {
-          setErr(
-            "Sesi login berakhir. Silakan login ulang sebelum mengunggah."
-          );
-          return;
-        }
-        session = refreshed.session;
-
-        // Sinkronkan cookie httpOnly di server
-        try {
-          await fetch("/api/auth/state", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ event: "TOKEN_REFRESHED", session }),
-            credentials: "include",
-          });
-        } catch {
-          // ignore
-        }
-      }
-
       const uploaded: string[] = [];
 
       for (const file of Array.from(files)) {
@@ -87,7 +58,6 @@ export default function UploadImages({
         const uuid =
           globalThis.crypto?.randomUUID?.() ??
           Math.random().toString(36).slice(2);
-
         const safeName = file.name.replace(/\s+/g, "-");
         const path = `public/${y}/${m}/${Date.now()}-${uuid}-${safeName}`;
 
@@ -103,7 +73,7 @@ export default function UploadImages({
           const code = httpStatusFromError(upErr);
           if (code === 401 || code === 403) {
             setErr(
-              "Akses ditolak (401/403). Pastikan sudah login & policy Storage mengizinkan INSERT untuk authenticated."
+              "Sesi login berakhir atau akses ditolak (401/403). Silakan login ulang, lalu coba unggah lagi."
             );
           } else {
             setErr(upErr.message);
