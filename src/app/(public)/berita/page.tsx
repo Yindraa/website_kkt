@@ -40,7 +40,6 @@ export default async function BeritaListPage({
         gambarUtama: true,
         tanggalPublish: true,
         sumberEksternal: true,
-        // gunakan kolom konten sbg ringkasan singkat (max 300-400 karakter)
         konten: true,
       },
     }),
