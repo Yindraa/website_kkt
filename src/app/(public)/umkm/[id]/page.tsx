@@ -1,25 +1,21 @@
-import Image from "next/image";
+// src/app/(public)/umkm/[id]/page.tsx
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import CopyButton from "../_components/CopyButton";
+import UmkmGallery from "@/sections/umkm/UmkmGallery";
 
-// Konversi link apa pun jadi URL embed yang aman untuk <iframe>
+// ---- Konversi link apa pun jadi URL embed yang aman untuk <iframe>
 function toEmbedUrl(raw?: string | null): string | null {
   if (!raw) return null;
-
   try {
     const u = new URL(raw);
-
-    // Sudah berupa embed
     if (
       u.hostname === "www.google.com" &&
       u.pathname.startsWith("/maps/embed")
     ) {
       return u.toString();
     }
-
-    // Koordinat “@-6.2,106.8,” atau “loc:-6.2,106.8”
     const coordMatch =
       raw.match(/@(-?\d+(\.\d+)?),\s*(-?\d+(\.\d+)?)/) ||
       raw.match(/loc[:=]\s*(-?\d+(\.\d+)?),\s*(-?\d+(\.\d+)?)/i);
@@ -28,8 +24,6 @@ function toEmbedUrl(raw?: string | null): string | null {
       const lng = coordMatch[3];
       return `https://www.google.com/maps?q=loc:${lat},${lng}&z=15&output=embed`;
     }
-
-    // Fallback
     return `https://www.google.com/maps?q=${encodeURIComponent(
       raw
     )}&output=embed`;
@@ -109,9 +103,10 @@ export const dynamic = "force-dynamic";
 export default async function UmkmDetailPage({
   params,
 }: {
+  // ⬇️ Sesuaikan dengan typing proyek kamu: params berupa Promise
   params: Promise<{ id: string }>;
 }) {
-  const { id } = await params;
+  const { id } = await params; // ⬅️ await di sini
   const numId = Number(id);
   if (!Number.isFinite(numId) || numId <= 0) notFound();
 
@@ -126,7 +121,6 @@ export default async function UmkmDetailPage({
       gmapsLink: true,
       gambar: true,
       kategori: { select: { nama: true } },
-
       pemilik: true,
       websiteUrl: true,
       instagramUrl: true,
@@ -165,28 +159,11 @@ export default async function UmkmDetailPage({
         </p>
       </header>
 
-      {/* Galeri */}
-      {data.gambar && data.gambar.length > 0 ? (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 mb-6">
-          {data.gambar.map((src, i) => (
-            <div
-              key={i}
-              className="relative aspect-[4/3] overflow-hidden rounded-lg border"
-            >
-              <Image
-                src={src}
-                alt={`${data.nama} ${i + 1}`}
-                fill
-                className="object-cover"
-                unoptimized
-              />
-            </div>
-          ))}
-        </div>
-      ) : null}
+      {/* === Galeri: gambar utama + thumbnail + lightbox === */}
+      <UmkmGallery images={data.gambar ?? []} title={data.nama} />
 
       {/* Info + Lokasi */}
-      <div className="grid gap-4 sm:grid-cols-2 mb-6">
+      <div className="grid gap-4 sm:grid-cols-2 mb-6 mt-4">
         <div className="panel p-4">
           <h2 className="font-semibold text-slate-900">Informasi</h2>
           <dl className="mt-2 text-sm">
@@ -241,7 +218,6 @@ export default async function UmkmDetailPage({
                   />
                 </div>
               </div>
-              {/* tombol langsung ke maps */}
               {data.gmapsLink ? (
                 <div className="mt-3">
                   <a
@@ -275,7 +251,6 @@ export default async function UmkmDetailPage({
         </div>
       </div>
 
-      {/* Deskripsi */}
       {data.deskripsi ? (
         <div className="panel p-4">
           <h2 className="font-semibold text-slate-900">Deskripsi</h2>

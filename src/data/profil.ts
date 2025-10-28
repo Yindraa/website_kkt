@@ -83,7 +83,7 @@ Mulai pada waktu itu Negeri yang mereka buka, mereka namakan Leilem yang terambi
 
 Yang pertama-tama pemimpin :
 Tonaas        : Timbuleng
-Pamatuan    : Ponto
+Pamatuan  : Ponto
 Kamarua    : Sembor
 
 Catatan: Tahun berdirinya tidak diketahui lagi.

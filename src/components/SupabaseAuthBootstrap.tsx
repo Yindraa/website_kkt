@@ -2,47 +2,60 @@
 "use client";
 
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabaseBrowser";
 
 export default function SupabaseAuthBootstrap() {
+  const router = useRouter();
+
   useEffect(() => {
     let unsub = () => {};
+
     (async () => {
-      // Hangatkan session di client
+      // 1) Hangatkan session di client
       const { data: init } = await supabaseBrowser.auth.getSession();
 
-      // Sinkronkan ke server (cookie httpOnly) — event: INITIAL_SESSION
+      // 2) Sinkronkan cookie httpOnly di server (INITIAL_SESSION)
       try {
-        await fetch("/api/auth/state", {
+        const res = await fetch("/api/auth/state", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          credentials: "include", // <-- penting agar cookie ditulis
           body: JSON.stringify({
             event: "INITIAL_SESSION",
             session: init.session,
           }),
         });
+        if (res.ok) {
+          // force server components / loaders baca cookie terbaru
+          router.refresh();
+        }
       } catch {
-        // abaikan
+        // diamkan saja
       }
 
-      // Teruskan sinkron untuk perubahan berikutnya (login/logout/refresh)
+      // 3) Subscribe perubahan auth dan sinkronkan lagi
       const { data: sub } = supabaseBrowser.auth.onAuthStateChange(
         async (event, session) => {
           try {
-            await fetch("/api/auth/state", {
+            const res = await fetch("/api/auth/state", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               credentials: "include",
               body: JSON.stringify({ event, session }),
             });
-          } catch {}
+            if (res.ok) router.refresh();
+          } catch {
+            // diamkan saja
+          }
         }
       );
+
       unsub = () => sub.subscription.unsubscribe();
     })();
+
     return () => unsub();
-  }, []);
+  }, [router]);
 
   return null;
 }
