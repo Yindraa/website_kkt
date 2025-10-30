@@ -1,111 +1,67 @@
+// src/app/(admin)/admin/berita/[id]/edit/page.tsx
 import { prisma } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
 import { notFound } from "next/navigation";
-import AdminBeritaForm, {
-  type FormState,
-} from "../../_components/AdminBeritaForm";
-import { ensureUniqueSlug, slugifyBase } from "@/lib/slug";
+import AdminBeritaForm from "../../_components/AdminBeritaForm";
+import { BeritaTipe } from "@prisma/client";
 
-async function updateAction(
-  _prev: FormState,
-  formData: FormData
-): Promise<FormState> {
-  "use server";
-  try {
-    const id = Number(formData.get("id"));
-    const judul = String(formData.get("judul") || "").trim();
-    const konten = String(formData.get("konten") || "").trim();
-    const gambarUtama =
-      String(formData.get("gambarUtama") || "").trim() || null;
-    const sumberEksternal =
-      String(formData.get("sumberEksternal") || "").trim() || null;
-    const isDraft = formData.get("isDraft") === "on";
-
-    if (!Number.isFinite(id) || id <= 0) {
-      return { ok: false, error: "ID tidak valid." };
-    }
-    if (!judul) return { ok: false, error: "Judul wajib diisi." };
-    if (!konten && !sumberEksternal) {
-      return { ok: false, error: "Isi konten atau cantumkan link sumber." };
-    }
-    if (sumberEksternal) {
-      try {
-        const u = new URL(sumberEksternal);
-        if (!/^https?:$/.test(u.protocol)) throw new Error();
-      } catch {
-        return { ok: false, error: "URL sumber tidak valid." };
-      }
-    }
-
-    const existing = await prisma.berita.findUnique({ where: { id } });
-    if (!existing) return { ok: false, error: "Data tidak ditemukan." };
-
-    // Regenerate slug hanya jika judul berubah
-    let slug = existing.slug;
-    if (existing.judul !== judul) {
-      const base = slugifyBase(judul);
-      slug = await ensureUniqueSlug(prisma, base, id);
-    }
-
-    await prisma.berita.update({
-      where: { id },
-      data: { judul, slug, konten, gambarUtama, isDraft, sumberEksternal },
-    });
-
-    // Revalidate publik & admin
-    revalidatePath("/berita");
-    revalidatePath(`/berita/${slug}`);
-    revalidatePath("/admin/berita");
-
-    // ⬇️ kembali ke list Kelola Berita
-    return { ok: true, redirectTo: "/admin/berita" };
-  } catch (err: unknown) {
-    return { ok: false, error: (err as Error)?.message ?? "Gagal menyimpan." };
-  }
-}
+export const dynamic = "force-dynamic";
 
 export default async function AdminBeritaEditPage({
   params,
 }: {
+  // ⬅️ penting: pakai Promise karena Next.js kamu meng-generate tipe begitu
   params: Promise<{ id: string }>;
 }) {
-  const { id } = await params;
+  const { id } = await params; // ⬅️ kita tunggu dulu
   const numId = Number(id);
-
   if (!Number.isFinite(numId) || numId <= 0) notFound();
 
-  const data = await prisma.berita.findUnique({ where: { id: numId } });
+  const data = await prisma.berita.findUnique({
+    where: { id: numId },
+    select: {
+      id: true,
+      judul: true,
+      slug: true,
+      konten: true,
+      gambarUtama: true,
+      sumberEksternal: true,
+      isDraft: true,
+      tipe: true,
+      tanggalEventMulai: true,
+      tanggalEventSelesai: true,
+      lokasi: true,
+      isRecurring: true,
+      recurringNote: true,
+    },
+  });
+
   if (!data) notFound();
 
   return (
-    <div className="max-w-3xl">
-      <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
-        Edit Berita
-      </h1>
-
+    <div className="max-w-5xl">
       <AdminBeritaForm
-        action={updateAction}
+        mode="edit"
         initial={{
           id: data.id,
           judul: data.judul,
+          slug: data.slug,
           konten: data.konten,
           gambarUtama: data.gambarUtama,
-          isDraft: data.isDraft,
           sumberEksternal: data.sumberEksternal,
+          isDraft: data.isDraft,
+          tipe: data.tipe as BeritaTipe,
+          // kirim sebagai string karena form kamu expect string | null
+          tanggalEventMulai: data.tanggalEventMulai
+            ? data.tanggalEventMulai.toISOString()
+            : null,
+          tanggalEventSelesai: data.tanggalEventSelesai
+            ? data.tanggalEventSelesai.toISOString()
+            : null,
+          lokasi: data.lokasi,
+          isRecurring: data.isRecurring,
+          recurringNote: data.recurringNote,
         }}
-        submitLabel="Simpan Perubahan"
       />
-
-      <div className="mt-4 flex gap-2">
-        <a
-          href={`/berita/${data.slug}`}
-          target="_blank"
-          className="btn btn-ghost"
-          rel="noreferrer"
-        >
-          Lihat Halaman
-        </a>
-      </div>
     </div>
   );
 }

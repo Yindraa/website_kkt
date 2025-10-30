@@ -1,197 +1,256 @@
+// src/app/(admin)/admin/berita/page.tsx
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
-import AdminHeader from "@/app/(admin)/_components/AdminHeader";
-import { Prisma } from "@prisma/client";
+import { toggleDraft, deleteBerita } from "./actions";
+import { BeritaTipe } from "@prisma/client";
 
-type SP = {
-  q?: string;
-  f?: "all" | "published" | "draft";
-  s?: "newest" | "oldest" | "az" | "za";
-};
+export const dynamic = "force-dynamic";
 
-async function deleteAction(formData: FormData) {
-  "use server";
-  const id = Number(formData.get("id"));
-  if (!id) return;
-  await prisma.berita.delete({ where: { id } });
-  revalidatePath("/admin/berita");
+// helper: DB enum -> label publik
+function labelFromTipe(tipe: BeritaTipe): "Artikel" | "Event" {
+  if (tipe === BeritaTipe.EVENT) return "Event";
+  return "Artikel";
 }
 
-export default async function AdminBeritaList({
-  searchParams,
-}: {
-  searchParams: Promise<SP>;
-}) {
-  const sp = await searchParams;
-  const q = (sp.q ?? "").trim();
-  const filter = sp.f ?? "all";
-  const sort = sp.s ?? "newest";
-
-  // Bangun WHERE yang mutable + tipe Prisma
-  const where: Prisma.BeritaWhereInput = {};
-  const and: Prisma.BeritaWhereInput[] = [];
-
-  if (q) {
-    and.push({
-      OR: [
-        { judul: { contains: q, mode: "insensitive" } },
-        { konten: { contains: q, mode: "insensitive" } },
-        { sumberEksternal: { contains: q, mode: "insensitive" } },
-      ],
-    });
-  }
-  if (filter === "published") and.push({ isDraft: false });
-  if (filter === "draft") and.push({ isDraft: true });
-  if (and.length) where.AND = and;
-
-  const orderBy:
-    | Prisma.BeritaOrderByWithRelationInput
-    | Prisma.BeritaOrderByWithRelationInput[] =
-    sort === "oldest"
-      ? { id: "asc" }
-      : sort === "az"
-      ? { judul: "asc" }
-      : sort === "za"
-      ? { judul: "desc" }
-      : { id: "desc" }; // newest
-
+export default async function AdminBeritaListPage() {
   const rows = await prisma.berita.findMany({
-    where,
-    orderBy,
+    orderBy: [{ tanggalPublish: "desc" }, { id: "desc" }],
     select: {
       id: true,
       judul: true,
+      slug: true,
       isDraft: true,
+      gambarUtama: true,
       tanggalPublish: true,
       sumberEksternal: true,
+      tipe: true,
+      tanggalEventMulai: true,
+      tanggalEventSelesai: true,
+      lokasi: true,
+      isRecurring: true,
+      recurringNote: true,
+      // ❌ jangan select updatedAt karena belum ada di DB
     },
   });
 
   return (
-    <div className="space-y-6">
-      <AdminHeader
-        title="Kelola Berita"
-        breadcrumbs={[
-          { label: "Dashboard", href: "/admin" },
-          { label: "Berita" },
-        ]}
-        backHref="/admin"
-        actions={
-          <Link href="/admin/berita/new" className="btn btn-primary">
-            + Tambah Berita
+    <section className="space-y-5">
+      {/* header */}
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-xl font-semibold text-slate-900">
+            Kelola Berita & Event
+          </h1>
+          <p className="text-sm text-slate-500">
+            Artikel tampil di publik sebagai berita, dan Event tampil sebagai
+            informasi kegiatan.
+          </p>
+        </div>
+        <div className="flex gap-2">
+          {/* ✅ tombol kembali ke dashboard admin */}
+          <Link href="/admin" className="btn btn-ghost">
+            ← Dashboard
           </Link>
-        }
-      />
+          <Link href="/admin/berita/new" className="btn btn-primary self-start">
+            + Berita / Event Baru
+          </Link>
+        </div>
+      </header>
 
-      {/* Filter bar */}
-      <form className="panel p-4 grid gap-2 sm:grid-cols-[1fr_180px_180px_auto]">
-        <input
-          name="q"
-          defaultValue={q}
-          placeholder="Cari judul/konten/sumber…"
-          className="rounded-lg border border-slate-300 px-3 py-2"
-        />
-        <select
-          name="f"
-          defaultValue={filter}
-          className="rounded-lg border border-slate-300 px-3 py-2"
-        >
-          <option value="all">Semua status</option>
-          <option value="published">Publish</option>
-          <option value="draft">Draft</option>
-        </select>
-        <select
-          name="s"
-          defaultValue={sort}
-          className="rounded-lg border border-slate-300 px-3 py-2"
-        >
-          <option value="newest">Terbaru</option>
-          <option value="oldest">Terlama</option>
-          <option value="az">Judul A–Z</option>
-          <option value="za">Judul Z–A</option>
-        </select>
-        <button className="btn btn-primary">Terapkan</button>
-      </form>
+      {/* versi mobile: cards */}
+      <div className="grid gap-3 sm:hidden">
+        {rows.length === 0 ? (
+          <div className="panel">
+            <p className="text-sm text-slate-500">Belum ada berita.</p>
+          </div>
+        ) : (
+          rows.map((r) => {
+            const isEvent = r.tipe === BeritaTipe.EVENT;
+            const label = labelFromTipe(r.tipe);
 
-      {/* Tabel */}
-      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+            const dateStr = isEvent
+              ? r.tanggalEventMulai
+                ? r.tanggalEventSelesai
+                  ? `${r.tanggalEventMulai.toLocaleDateString(
+                      "id-ID"
+                    )} – ${r.tanggalEventSelesai.toLocaleDateString("id-ID")}`
+                  : r.tanggalEventMulai.toLocaleDateString("id-ID")
+                : "—"
+              : r.tanggalPublish.toLocaleDateString("id-ID");
+
+            // ✅ form action harus pre-bound, ini sudah benar
+            const toggleAction = toggleDraft.bind(null, r.id, !r.isDraft);
+            const deleteAction = deleteBerita.bind(null, r.id);
+
+            return (
+              <article key={r.id} className="panel p-4 space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <h2 className="font-medium text-slate-900">{r.judul}</h2>
+                    <p className="text-xs text-slate-400">{r.slug}</p>
+                  </div>
+                  <span
+                    className={[
+                      "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
+                      label === "Event"
+                        ? "bg-amber-50 text-amber-700"
+                        : "bg-sky-50 text-sky-700",
+                    ].join(" ")}
+                  >
+                    {label}
+                  </span>
+                </div>
+
+                <div className="text-xs text-slate-500">
+                  {label === "Event" ? "Jadwal" : "Tanggal terbit"}: {dateStr}
+                  {r.lokasi ? ` • ${r.lokasi}` : ""}
+                  {r.isRecurring && r.recurringNote
+                    ? ` • ${r.recurringNote}`
+                    : ""}
+                </div>
+
+                <div className="flex gap-2">
+                  <form action={toggleAction}>
+                    <button type="submit" className="btn btn-ghost btn-xs">
+                      {r.isDraft ? "Terbitkan" : "Jadikan Draft"}
+                    </button>
+                  </form>
+                  {/* ✅ pakai ID, bukan slug */}
+                  <Link
+                    href={`/admin/berita/${r.id}/edit`}
+                    className="btn btn-ghost btn-xs"
+                  >
+                    Edit
+                  </Link>
+                  <form action={deleteAction}>
+                    <button
+                      type="submit"
+                      className="btn btn-ghost btn-xs text-red-600"
+                    >
+                      Hapus
+                    </button>
+                  </form>
+                </div>
+              </article>
+            );
+          })
+        )}
+      </div>
+
+      {/* versi desktop: tabel */}
+      <div className="panel p-0 overflow-x-auto hidden sm:block">
         <table className="min-w-full text-sm">
-          <thead className="bg-slate-50 text-slate-600">
+          <thead className="bg-slate-50 border-b">
             <tr>
-              <th className="px-4 py-3 text-left">Judul</th>
-              <th className="px-4 py-3 text-left">Status</th>
-              <th className="px-4 py-3 text-left">Sumber</th>
-              <th className="px-4 py-3 text-right">Aksi</th>
+              <th className="px-3 py-2 text-left w-[35%]">Judul</th>
+              <th className="px-3 py-2 text-left">Jenis</th>
+              <th className="px-3 py-2 text-left">Jadwal / Tanggal</th>
+              <th className="px-3 py-2 text-left">Status</th>
+              <th className="px-3 py-2 text-right w-[1%]">Aksi</th>
             </tr>
           </thead>
           <tbody>
-            {rows.map((r) => (
-              <tr key={r.id} className="border-t border-slate-100">
-                <td className="px-4 py-3">
-                  <div className="font-medium text-slate-900 truncate max-w-[42ch]">
-                    {r.judul}
-                  </div>
-                  <div className="text-xs text-slate-500">
-                    {new Date(r.tanggalPublish).toLocaleDateString("id-ID")}
-                  </div>
-                </td>
-                <td className="px-4 py-3">
-                  {r.isDraft ? (
-                    <span className="rounded-full bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 text-xs">
-                      Draft
-                    </span>
-                  ) : (
-                    <span className="rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 text-xs">
-                      Publish
-                    </span>
-                  )}
-                </td>
-                <td className="px-4 py-3 truncate max-w-[26ch]">
-                  {r.sumberEksternal ? (
-                    <a
-                      className="uline"
-                      href={r.sumberEksternal}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      Sumber
-                    </a>
-                  ) : (
-                    <span className="text-slate-400">—</span>
-                  )}
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex items-center justify-end gap-2">
-                    <Link
-                      href={`/admin/berita/${r.id}/edit`}
-                      className="btn btn-ghost"
-                    >
-                      Edit
-                    </Link>
-                    <form action={deleteAction}>
-                      <input type="hidden" name="id" value={r.id} />
-                      <button className="btn btn-ghost text-red-600">
-                        Hapus
-                      </button>
-                    </form>
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {rows.length === 0 && (
+            {rows.length === 0 ? (
               <tr>
                 <td
-                  colSpan={4}
-                  className="px-4 py-6 text-center text-slate-500"
+                  colSpan={5}
+                  className="px-3 py-6 text-center text-slate-500"
                 >
-                  Tidak ada data.
+                  Belum ada berita.
                 </td>
               </tr>
+            ) : (
+              rows.map((r) => {
+                const isEvent = r.tipe === BeritaTipe.EVENT;
+                const label = labelFromTipe(r.tipe);
+
+                const dateStr = isEvent
+                  ? r.tanggalEventMulai
+                    ? r.tanggalEventSelesai
+                      ? `${r.tanggalEventMulai.toLocaleDateString(
+                          "id-ID"
+                        )} – ${r.tanggalEventSelesai.toLocaleDateString(
+                          "id-ID"
+                        )}`
+                      : r.tanggalEventMulai.toLocaleDateString("id-ID")
+                    : "—"
+                  : r.tanggalPublish.toLocaleDateString("id-ID");
+
+                const toggleAction = toggleDraft.bind(null, r.id, !r.isDraft);
+                const deleteAction = deleteBerita.bind(null, r.id);
+
+                return (
+                  <tr key={r.id} className="border-b last:border-b-0">
+                    <td className="px-3 py-3 align-top">
+                      <div className="font-medium text-slate-900">
+                        {r.judul}
+                      </div>
+                      <div className="text-xs text-slate-500">{r.slug}</div>
+                    </td>
+                    <td className="px-3 py-3 align-top">
+                      <span
+                        className={[
+                          "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
+                          label === "Event"
+                            ? "bg-amber-50 text-amber-700"
+                            : "bg-sky-50 text-sky-700",
+                        ].join(" ")}
+                      >
+                        {label}
+                      </span>
+                    </td>
+                    <td className="px-3 py-3 align-top text-xs text-slate-700 space-y-1">
+                      <div>{dateStr}</div>
+                      {r.lokasi ? <div>{r.lokasi}</div> : null}
+                      {r.isRecurring && r.recurringNote ? (
+                        <div className="text-amber-700">{r.recurringNote}</div>
+                      ) : null}
+                    </td>
+                    <td className="px-3 py-3 align-top">
+                      {r.isDraft ? (
+                        <span className="text-xs rounded bg-slate-200 px-2 py-0.5">
+                          Draft
+                        </span>
+                      ) : (
+                        <span className="text-xs rounded bg-emerald-100 px-2 py-0.5 text-emerald-700">
+                          Terbit
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-3 py-3 align-top text-right">
+                      <div className="inline-flex gap-2">
+                        <form action={toggleAction}>
+                          <button
+                            className="btn btn-ghost btn-xs"
+                            type="submit"
+                          >
+                            {r.isDraft ? "Terbitkan" : "Jadikan Draft"}
+                          </button>
+                        </form>
+                        {/* ✅ pakai ID, bukan slug */}
+                        <Link
+                          href={`/admin/berita/${r.id}/edit`}
+                          className="btn btn-ghost btn-xs"
+                        >
+                          Edit
+                        </Link>
+                        <form action={deleteAction}>
+                          <button
+                            className="btn btn-ghost btn-xs text-red-600"
+                            type="submit"
+                          >
+                            Hapus
+                          </button>
+                        </form>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>
       </div>
-    </div>
+    </section>
   );
 }

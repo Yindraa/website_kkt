@@ -9,7 +9,7 @@ export default function CTAKontak({
   className = "",
 }: {
   note: string;
-  waHref: string; // contoh: "https://wa.me/62xxxxxxxxxx"
+  waHref: string;
   altLinkHref?: string;
   className?: string;
 }) {

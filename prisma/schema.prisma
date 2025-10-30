@@ -1,6 +1,5 @@
 // prisma/schema.prisma
 
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -15,20 +14,16 @@ datasource db {
 // ADMIN & PENDUKUNG
 // ====================================================================
 
-// Digunakan untuk metadata admin dan Role-Based Access Control (RBAC)
 model AdminUser {
   id            Int      @id @default(autoincrement())
-  email         String   @unique // Harus sama dengan email di Supabase Auth
-  // passwordHash disimpan di Supabase Auth, namun kolom ini bisa dipertahankan
-  // jika Anda ingin implementasi otentikasi kustom di masa depan.
+  email         String   @unique
   passwordHash  String?
   nama          String
-  role          String   @default("ADMIN_DESA") // ADMIN_DESA, SUPER_ADMIN, dll.
+  role          String   @default("ADMIN_DESA")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
 
-// Untuk menampung pesan yang dikirimkan melalui form Kontak
 model PesanKontak {
   id            Int      @id @default(autoincrement())
   nama          String
@@ -45,20 +40,36 @@ model KategoriUmkm {
   umkms         Umkm[]
 }
 
-
 // ====================================================================
 // MODEL DATA PUBLIK
 // ====================================================================
 
+// ❗ sekarang cuma 2
+enum BeritaTipe {
+  ARTIKEL   // semua berita, pengumuman, info umum
+  EVENT     // semua kegiatan / agenda / posyandu bulanan
+}
+
 model Berita {
-  id            Int      @id @default(autoincrement())
-  judul         String
-  slug          String   @unique       // Untuk URL bersih: /berita/judul-berita
-  konten        String                 // Isi berita lengkap
-  gambarUtama   String?                // URL gambar utama
-  tanggalPublish DateTime @default(now())
-  isDraft       Boolean  @default(true) // True jika masih dalam proses penulisan
-  sumberEksternal String?                // Link ke sumber asli (jika ada)
+  id                  Int         @id @default(autoincrement())
+  judul               String
+  slug                String      @unique
+  konten              String
+  gambarUtama         String?
+  tanggalPublish      DateTime    @default(now())
+  isDraft             Boolean     @default(true)
+  sumberEksternal     String?
+  tipe                BeritaTipe  @default(ARTIKEL)
+
+  // field event
+  tanggalEventMulai   DateTime?
+  tanggalEventSelesai DateTime?
+  lokasi              String?
+  isRecurring         Boolean     @default(false)
+  recurringNote       String?
+
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
 }
 
 model Umkm {
@@ -67,27 +78,29 @@ model Umkm {
   deskripsi     String?
   alamat        String?
   kontak        String?
-  gambar        String[]                 // Array URL gambar
-  gmapsLink     String?                  // Link Google Maps yang interaktif
+  gambar        String[]
+  gmapsLink     String?
   kategori      KategoriUmkm @relation(fields: [kategoriId], references: [id])
   kategoriId    Int
-  pemilik      String?
-  websiteUrl   String?
-  instagramUrl String?
-  facebookUrl  String?
-  tiktokUrl    String?
-  xUrl         String?
-  youtubeUrl   String?
+  pemilik       String?
+  websiteUrl    String?
+  instagramUrl  String?
+  facebookUrl   String?
+  tiktokUrl     String?
+  xUrl          String?
+  youtubeUrl    String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 model Potensi {
-  id                  Int      @id @default(autoincrement())
-  nama                String
-  deskripsiSingkat    String?
-  deskripsiLengkap    String
-  lokasi              String?
-  gmapsLink           String?                  // Link Google Maps
-  gambarGaleri        String[]                 // Array URL gambar
+  id               Int      @id @default(autoincrement())
+  nama             String
+  deskripsiSingkat String?
+  deskripsiLengkap String
+  lokasi           String?
+  gmapsLink        String?
+  gambarGaleri     String[]
 }
 
 model LayananKesehatan {
@@ -96,6 +109,6 @@ model LayananKesehatan {
   alamat        String?
   jenisLayanan  String?
   kontak        String?
-  jadwalBuka    String?  // Contoh: Senin-Jumat, 08:00 - 16:00
-  gmapsLink     String?                  // Link Google Maps
+  jadwalBuka    String?
+  gmapsLink     String?
 }
