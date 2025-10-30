@@ -4,6 +4,7 @@
 import { useRef, useState } from "react";
 import Image from "next/image";
 import { supabaseBrowser } from "@/lib/supabaseBrowser";
+import { getSignedUploadUrl } from "../_actions/storage";
 
 type Props = {
   name: string; // nama input hidden (array), mis. "gambar"
@@ -42,7 +43,6 @@ export default function UploadImages({
     setUploading(true);
 
     try {
-      const supabase = supabaseBrowser;
       const uploaded: string[] = [];
 
       for (const file of Array.from(files)) {
@@ -61,11 +61,17 @@ export default function UploadImages({
         const safeName = file.name.replace(/\s+/g, "-");
         const path = `public/${y}/${m}/${Date.now()}-${uuid}-${safeName}`;
 
-        const { error: upErr } = await supabase.storage
+        // 1) MINTA signed upload URL dari server (pakai service role)
+        const { path: signedPath, token } = await getSignedUploadUrl(
+          bucket,
+          path
+        );
+
+        // 2) Upload file ke signed URL (bypass RLS)
+        const { error: upErr } = await supabaseBrowser.storage
           .from(bucket)
-          .upload(path, file, {
+          .uploadToSignedUrl(signedPath, token, file, {
             cacheControl: "3600",
-            upsert: false,
             contentType: file.type,
           });
 
@@ -73,7 +79,7 @@ export default function UploadImages({
           const code = httpStatusFromError(upErr);
           if (code === 401 || code === 403) {
             setErr(
-              "Sesi login berakhir atau akses ditolak (401/403). Silakan login ulang, lalu coba unggah lagi."
+              "Akses ditolak (401/403). Pastikan Anda login atau hubungi admin untuk akses unggah."
             );
           } else {
             setErr(upErr.message);
@@ -81,7 +87,10 @@ export default function UploadImages({
           continue;
         }
 
-        const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+        // 3) Ambil public URL
+        const { data } = supabaseBrowser.storage
+          .from(bucket)
+          .getPublicUrl(signedPath);
         if (data?.publicUrl) uploaded.push(data.publicUrl);
       }
 

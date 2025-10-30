@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 export default function AdminBeritaNewPage() {
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-5xl">
       <AdminBeritaForm mode="create" />
     </div>
   );
