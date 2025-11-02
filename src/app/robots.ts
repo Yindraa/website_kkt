@@ -1,17 +1,14 @@
 // src/app/robots.ts
 import type { MetadataRoute } from "next";
 
+const siteUrl = "https://website-desa-leilem.vercel.app";
+
 export default function robots(): MetadataRoute.Robots {
-  const base =
-    process.env.NEXT_PUBLIC_SITE_URL || "https://<project>.vercel.app";
   return {
-    rules: [
-      {
-        userAgent: "*",
-        allow: "/",
-      },
-    ],
-    sitemap: `${base}/sitemap.xml`,
-    host: base,
+    rules: {
+      userAgent: "*",
+      allow: "/",
+    },
+    sitemap: `${siteUrl}/sitemap.xml`,
   };
 }

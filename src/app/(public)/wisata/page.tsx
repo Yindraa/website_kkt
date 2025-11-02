@@ -10,6 +10,7 @@ import SafetyTips from "@/sections/wisata/SafetyTips";
 import FAQAccordion from "@/sections/wisata/FAQAccordion";
 import MapCard from "@/sections/wisata/MapCard";
 import CTAContact from "@/sections/wisata/CTAContact";
+import type { Metadata } from "next";
 
 import {
   hero,
@@ -24,7 +25,41 @@ import {
   contact,
 } from "@/data/wisata-rano";
 
-// jika perlu: export metadata untuk SEO
+// 👇 metadata untuk SEO
+export const metadata: Metadata = {
+  title: "Wisata Rano Reindang – Desa Leilem",
+  description:
+    "Informasi kunjungan ke wisata Rano Reindang di Desa Leilem: daya tarik, jam kunjung, tiket, fasilitas, tips keamanan, peta lokasi, dan kontak pengelola.",
+  openGraph: {
+    title: "Wisata Rano Reindang – Desa Leilem",
+    description:
+      "Nikmati suasana alam Desa Leilem. Lihat foto, fasilitas, jam kunjung, dan lokasi wisata.",
+    url: "https://website-desa-leilem.vercel.app/wisata",
+    siteName: "Pemerintah Desa Leilem",
+    locale: "id_ID",
+    type: "article",
+    images: hero?.image
+      ? [
+          {
+            url: hero.image,
+            width: 1200,
+            height: 630,
+            alt: "Wisata Rano Reindang Desa Leilem",
+          },
+        ]
+      : undefined,
+  },
+  alternates: {
+    canonical: "https://website-desa-leilem.vercel.app/wisata",
+  },
+  keywords: [
+    "wisata leilem",
+    "rano reindang",
+    "wisata minahasa",
+    "wisata sonder",
+    "desa leilem",
+  ],
+};
 
 export default function WisataPage() {
   return (

@@ -1,11 +1,38 @@
+// src/app/(public)/umkm/page.tsx
 import Link from "next/link";
-import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import UmkmCard from "./_components/UmkmCard";
+import type { Metadata } from "next";
 
 type SP = { q?: string; k?: string; s?: string }; // s = sort: newest|az|za
 
 export const dynamic = "force-dynamic";
+
+// 👇 metadata SEO
+export const metadata: Metadata = {
+  title: "UMKM Desa Leilem – Produk & Jasa Warga",
+  description:
+    "Daftar pelaku UMKM Desa Leilem: kuliner, kerajinan, jasa, dan usaha rumahan. Bisa difilter berdasarkan kategori dan kata kunci.",
+  openGraph: {
+    title: "UMKM Desa Leilem",
+    description:
+      "Dukung usaha warga Desa Leilem. Lihat daftar UMKM dan kontak mereka.",
+    url: "https://website-desa-leilem.vercel.app/umkm",
+    siteName: "Pemerintah Desa Leilem",
+    locale: "id_ID",
+    type: "website",
+  },
+  alternates: {
+    canonical: "https://website-desa-leilem.vercel.app/umkm",
+  },
+  keywords: [
+    "UMKM desa leilem",
+    "usaha desa leilem",
+    "produk lokal leilem",
+    "minahasa",
+    "sonder",
+  ],
+};
 
 export default async function UmkmListPage({
   searchParams,

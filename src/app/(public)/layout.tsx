@@ -1,3 +1,4 @@
+// src/app/(public)/layout.tsx
 import type { Metadata } from "next";
 import "../globals.css";
 import Navbar from "@/components/Navbar";
@@ -12,9 +13,53 @@ const poppins = Poppins({
   display: "swap",
 });
 
+// ganti ke domain kamu
+const siteUrl = "https://website-desa-leilem.vercel.app";
+
 export const metadata: Metadata = {
-  title: "Pemerintah Desa Leilem",
-  description: "Profil Desa, Berita, UMKM, Wisata, Kesehatan, Kontak & Layanan",
+  title: {
+    default: "Pemerintah Desa Leilem – Kecamatan Sonder, Minahasa",
+    template: "%s | Desa Leilem",
+  },
+  description:
+    "Profil resmi Desa Leilem, Kecamatan Sonder, Kabupaten Minahasa: sejarah desa, letak geografis, berita, UMKM, potensi wisata, kesehatan, dan kontak layanan.",
+  metadataBase: new URL(siteUrl),
+  alternates: {
+    canonical: siteUrl,
+  },
+  openGraph: {
+    title: "Pemerintah Desa Leilem",
+    description:
+      "Website resmi Desa Leilem berisi profil desa, berita kegiatan, UMKM lokal, potensi wisata, dan layanan masyarakat.",
+    url: siteUrl,
+    siteName: "Desa Leilem",
+    locale: "id_ID",
+    type: "website",
+    images: [
+      {
+        url: "/og-desa-leilem.jpg", // taruh di /public, boleh pakai foto kantor desa
+        width: 1200,
+        height: 630,
+        alt: "Website Desa Leilem",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Pemerintah Desa Leilem",
+    description:
+      "Informasi desa, berita kegiatan, UMKM dan layanan Desa Leilem.",
+    images: ["/og-desa-leilem.png"],
+  },
+  keywords: [
+    "Desa Leilem",
+    "Leilem Minahasa",
+    "Kecamatan Sonder",
+    "Kabupaten Minahasa",
+    "Website Desa Leilem",
+    "Profil Desa Leilem",
+    "UMKM Desa Leilem",
+  ],
 };
 
 export default function RootLayout({
@@ -25,10 +70,9 @@ export default function RootLayout({
   return (
     <html lang="id">
       <body
-        className={`${poppins.variable} font-sans min-h-screen flex flex-col`}
+        className={`${poppins.variable} font-sans min-h-screen flex flex-col bg-slate-50`}
       >
         <Navbar />
-        {/* Konten putih + transisi antar-halaman */}
         <main className="flex-1 bg-white">
           <PageFade>{children}</PageFade>
         </main>
