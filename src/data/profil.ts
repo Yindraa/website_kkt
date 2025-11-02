@@ -20,10 +20,11 @@ export const misi: string[] = [
  *  ======================= */
 export const demografi = {
   penduduk: {
-    laki: 709,
-    perempuan: 743,
+    // dari data kamu
     total: 1452,
     kk: 534,
+    laki: 709,
+    perempuan: 743,
   },
   dusunJaga: 6,
   luasWilayahHa: 172,
@@ -33,6 +34,48 @@ export const demografi = {
     { label: "Lahan Pekarangan", value: "15 Ha" },
     { label: "Prasarana Umum", value: "16 Ha" },
     { label: "Lahan Kritis", value: "9 Ha" },
+  ],
+
+  // ====== tambahan baru (hardcode) ======
+  // 2. Profesi
+  pekerjaan: [
+    { label: "Pelajar / Mahasiswa", value: 272 },
+    { label: "Pensiunan", value: 20 },
+    { label: "Perdagangan", value: 1 },
+    { label: "Pengurus RT", value: 306 },
+    { label: "Wiraswasta", value: 252 },
+    { label: "Guru", value: 3 },
+    { label: "Perawat", value: 7 },
+    { label: "Petani", value: 89 },
+    { label: "Tukang", value: 10 },
+    { label: "Belum / Tidak Bekerja", value: 100 },
+  ],
+
+  // 3. Agama
+  agama: [
+    { label: "Islam", value: 1 },
+    { label: "Kristen (Protestan)", value: 1426 },
+    { label: "Katolik", value: 9 },
+  ],
+
+  // 4. Status Perkawinan
+  statusPerkawinan: [
+    { label: "Belum Kawin", value: 601 },
+    { label: "Kawin", value: 725 },
+    { label: "Cerai Hidup", value: 9 },
+    { label: "Cerai Mati", value: 101 },
+  ],
+
+  // 5. Pendidikan
+  pendidikan: [
+    { label: "Belum Sekolah", value: 226 },
+    { label: "Belum Tamat SD", value: 161 },
+    { label: "SLTP / SMP", value: 232 },
+    { label: "SMA", value: 544 },
+    { label: "D1 & D2", value: 6 },
+    { label: "D3", value: 13 },
+    { label: "S1", value: 105 },
+    { label: "S2", value: 5 },
   ],
 };
 
