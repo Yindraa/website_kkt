@@ -13,7 +13,6 @@ const poppins = Poppins({
   display: "swap",
 });
 
-// ganti ke domain kamu
 const siteUrl = "https://website-desa-leilem.vercel.app";
 
 export const metadata: Metadata = {
@@ -37,7 +36,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/og-desa-leilem.jpg", // taruh di /public, boleh pakai foto kantor desa
+        url: "/og-desa-leilem.jpg",
         width: 1200,
         height: 630,
         alt: "Website Desa Leilem",
@@ -69,6 +68,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="id">
+      <head>
+        <meta
+          name="google-site-verification"
+          content="google0321d35f27087cc6.html"
+        />
+      </head>
       <body
         className={`${poppins.variable} font-sans min-h-screen flex flex-col bg-slate-50`}
       >
