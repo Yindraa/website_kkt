@@ -62,6 +62,27 @@ export const metadata: Metadata = {
 };
 
 export default function WisataPage() {
+  // 🔒 normalisasi socials dari data ke union yang diterima komponen
+  const socials =
+    (contact as any).socials?.flatMap((s: any) => {
+      switch (s.type) {
+        case "instagram":
+        case "facebook":
+        case "tiktok":
+        case "website":
+          return [
+            {
+              type: s.type as "instagram" | "facebook" | "tiktok" | "website",
+              label: s.label as string,
+              url: s.url as string,
+            },
+          ];
+        default:
+          // kalau ada type lain, skip saja biar nggak bikin TS error
+          return [];
+      }
+    }) ?? [];
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 space-y-6">
       <HeroPotensi
@@ -98,6 +119,7 @@ export default function WisataPage() {
         address={contact.address}
         email={contact.email}
         wa={contact.wa}
+        socials={socials}
       />
     </div>
   );

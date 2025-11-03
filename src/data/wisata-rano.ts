@@ -112,12 +112,30 @@ export const galeri: string[] = [
   "/images/wisata/rano-8.jpg",
   "/images/wisata/rano-9.jpg",
   "/images/wisata/rano-10.jpg",
-]; // siapkan file2 ini di public/images/wisata/
+];
 
 export const contact = {
   address: "Leilem, Minahasa, Sulawesi Utara",
-  email: "desaleilem@yahoo.co.id",
+  email: "wisataalamranoreindangleilem@gmail.com",
   wa: "6285174331388",
   mapsEmbed:
     "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2377.0267896500363!2d124.81767070354094!3d1.2660698156080976!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x32876bf86fec5a87%3A0x98d60bd704e18786!2sRano%20Reindang!5e0!3m2!1sid!2sid!4v1761449039811!5m2!1sid!2sid",
+  // 👇 tambahan baru: sosial media
+  socials: [
+    {
+      type: "instagram",
+      label: "@wisataalamranoreindang",
+      url: "https://instagram.com/wisataalamranoreindang",
+    },
+    {
+      type: "facebook",
+      label: "Rano Reindang",
+      url: "https://facebook.com/RanoReindang", // kalau beda silakan ganti
+    },
+    {
+      type: "tiktok",
+      label: "Wisata Alam Rano Reindang",
+      url: "https://www.tiktok.com/@wisataalamranoreindang", // kalau username beda, ganti di sini
+    },
+  ],
 };
