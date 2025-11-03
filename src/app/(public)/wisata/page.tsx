@@ -62,26 +62,33 @@ export const metadata: Metadata = {
 };
 
 export default function WisataPage() {
-  // 🔒 normalisasi socials dari data ke union yang diterima komponen
-  const socials =
-    (contact as any).socials?.flatMap((s: any) => {
-      switch (s.type) {
-        case "instagram":
-        case "facebook":
-        case "tiktok":
-        case "website":
-          return [
-            {
-              type: s.type as "instagram" | "facebook" | "tiktok" | "website",
-              label: s.label as string,
-              url: s.url as string,
-            },
-          ];
-        default:
-          // kalau ada type lain, skip saja biar nggak bikin TS error
-          return [];
-      }
-    }) ?? [];
+  // 👇 ini yang bikin error kemarin — sekarang kita tikekan
+  const socialResmi = [
+    {
+      type: "instagram",
+      label: "@wisataalamranoreindang",
+      url: "https://www.instagram.com/wisataalamranoreindang",
+    },
+    {
+      type: "facebook",
+      label: "Rano Reindang",
+      url: "https://www.facebook.com/profile.php?id=61569395981513",
+    },
+    {
+      type: "tiktok",
+      label: "Wisata Alam Rano Reindang",
+      url: "https://www.tiktok.com/@wisataalamranoreindang",
+    },
+    {
+      type: "website",
+      label: "Email wisata",
+      url: "mailto:wisataalamranoreindangleilem@gmail.com",
+    },
+  ] satisfies Array<{
+    type: "instagram" | "facebook" | "tiktok" | "website";
+    label: string;
+    url: string;
+  }>;
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 space-y-6">
@@ -119,7 +126,7 @@ export default function WisataPage() {
         address={contact.address}
         email={contact.email}
         wa={contact.wa}
-        socials={socials}
+        socials={socialResmi}
       />
     </div>
   );
