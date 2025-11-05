@@ -60,11 +60,10 @@ export const visitInfo = {
     { day: "Senin–Jumat", time: "08.00–17.00" },
     { day: "Sabtu–Minggu/Libur", time: "07.00–18.00" },
   ],
-  ticketPolicy: "Tiket masuk akan mulai diberlakukan pada tahun 2025.",
+  ticketPolicy: "Tiket masuk sudah sekaligus free minuman (Floridina/Fanta).",
   tickets: [
-    { label: "Dewasa", price: "TBA" },
-    { label: "Anak", price: "TBA" },
-    { label: "Parkir", price: "TBA" },
+    { label: "Dewasa", price: "Rp. 15.000" },
+    { label: "Anak", price: "Rp. 15.000" },
   ],
 };
 

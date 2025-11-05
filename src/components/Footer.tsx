@@ -72,7 +72,7 @@ export default function Footer() {
       {/* BOTTOM BAR */}
       <div className="mx-auto max-w-6xl px-4 h-12 flex flex-col sm:flex-row items-center justify-between gap-2 text-sm text-white/80">
         <div>© {new Date().getFullYear()} Website Desa Leilem</div>
-        <div className="text-white/70">KKT 144 UNSRAT POSKO LEILEM</div>
+        <div className="text-white/70">PEMERINTAHAN DESA LEILEM</div>
       </div>
     </footer>
   );
